@@ -1,4 +1,4 @@
-import { rm, mkdir, readFile, writeFile } from "node:fs/promises";
+import { rm, mkdir, readFile, writeFile, copyFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build as buildJavaScript } from "esbuild";
 import { bundle as bundleCss } from "lightningcss";
@@ -49,7 +49,12 @@ await Promise.all([
       useShortDoctype: true
     });
     await writeFile(resolve(outputDir, "index.html"), minified, "utf8");
-  })()
+  })(),
+
+  copyFile(resolve(sourceDir, "robots.txt"), resolve(outputDir, "robots.txt")),
+  copyFile(resolve(sourceDir, "sitemap.xml"), resolve(outputDir, "sitemap.xml")),
+  copyFile(resolve(sourceDir, "favicon.png"), resolve(outputDir, "favicon.png")),
+  copyFile(resolve(sourceDir, "github-svgrepo-com.svg"), resolve(outputDir, "github-svgrepo-com.svg"))
 ]);
 
 console.log(`Build complete: ${outputDir}`);

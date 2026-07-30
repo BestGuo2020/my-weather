@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://weather.bestguo.top/?lang=zh_cn</loc>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://weather.bestguo.top/?lang=zh_cn"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://weather.bestguo.top/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://weather.bestguo.top/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://weather.bestguo.top/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://weather.bestguo.top/?lang=ja"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://weather.bestguo.top/"/>
+  </url>
+  <url><loc>https://weather.bestguo.top/?lang=en</loc></url>
+  <url><loc>https://weather.bestguo.top/?lang=es</loc></url>
+  <url><loc>https://weather.bestguo.top/?lang=fr</loc></url>
+  <url><loc>https://weather.bestguo.top/?lang=ja</loc></url>
+</urlset>

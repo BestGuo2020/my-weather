@@ -30,7 +30,17 @@ const translations = {
 };
 
 const localeMap = { zh_cn: "zh-CN", en: "en-GB", es: "es-ES", fr: "fr-FR", ja: "ja-JP" };
-const state = { lang: localStorage.getItem("weather-language") || "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0 };
+const seoContent = {
+  zh_cn: { title: "My Weather · 全球实时天气", description: "极简天气查询，直观呈现全球城市的实时天气、温度、湿度和风速。", keywords: "天气,实时天气,天气查询,温度,湿度,风速,全球天气", ogLocale: "zh_CN" },
+  en: { title: "My Weather · Current Weather Worldwide", description: "A minimalist weather experience for checking current conditions, temperature, humidity, and wind worldwide.", keywords: "weather,current weather,weather search,temperature,humidity,wind,world weather", ogLocale: "en_GB" },
+  es: { title: "My Weather · Tiempo actual en todo el mundo", description: "Una experiencia meteorológica minimalista para consultar el tiempo, la temperatura, la humedad y el viento en todo el mundo.", keywords: "tiempo,tiempo actual,pronóstico,temperatura,humedad,viento,tiempo mundial", ogLocale: "es_ES" },
+  fr: { title: "My Weather · Météo actuelle dans le monde", description: "Une expérience météo minimaliste pour consulter le temps, la température, l’humidité et le vent partout dans le monde.", keywords: "météo,météo actuelle,prévisions,température,humidité,vent,météo mondiale", ogLocale: "fr_FR" },
+  ja: { title: "My Weather · 世界の現在の天気", description: "世界各地の天気、気温、湿度、風速を直感的に確認できる、ミニマルな天気サービスです。", keywords: "天気,現在の天気,天気検索,気温,湿度,風速,世界の天気", ogLocale: "ja_JP" }
+};
+const supportedLanguages = Object.keys(localeMap);
+const requestedLanguage = new URLSearchParams(location.search).get("lang");
+const initialLanguage = supportedLanguages.includes(requestedLanguage) ? requestedLanguage : localStorage.getItem("weather-language");
+const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0 };
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   form: $(".search-form"), input: $("#city-search"), locate: $("#location-button"), languageButton: $("#language-button"),
@@ -42,6 +52,21 @@ const elements = {
 };
 
 function t(key) { return translations[state.lang][key] || translations.en[key] || key; }
+
+function updateSeo() {
+  const seo = seoContent[state.lang];
+  const pageUrl = `https://weather.bestguo.top/?lang=${state.lang}`;
+  document.title = seo.title;
+  document.querySelector('meta[name="description"]').content = seo.description;
+  document.querySelector('meta[name="keywords"]').content = seo.keywords;
+  document.querySelector('link[rel="canonical"]').href = pageUrl;
+  document.querySelector('meta[property="og:title"]').content = seo.title;
+  document.querySelector('meta[property="og:description"]').content = seo.description;
+  document.querySelector('meta[property="og:url"]').content = pageUrl;
+  document.querySelector('meta[property="og:locale"]').content = seo.ogLocale;
+  document.querySelector('meta[name="twitter:title"]').content = seo.title;
+  document.querySelector('meta[name="twitter:description"]').content = seo.description;
+}
 
 function applyLanguage() {
   const locale = localeMap[state.lang];
@@ -57,6 +82,7 @@ function applyLanguage() {
   });
   updateSoundLabel();
   updateFullscreenLabel();
+  updateSeo();
   if (state.data) renderWeather(state.data);
   else updateDate();
 }
@@ -178,7 +204,7 @@ function renderWeather(data) {
   const updatedAt = state.updatedAt || new Date();
   elements.updated.dateTime = updatedAt.toISOString();
   elements.updated.textContent = new Intl.DateTimeFormat(localeMap[state.lang], { hour: "2-digit", minute: "2-digit" }).format(updatedAt);
-  document.title = `${Math.round(data.main.temp)}° · ${data.name}`;
+  document.title = `${Math.round(data.main.temp)}° · ${data.name} | My Weather`;
   if (state.sound) restartWeatherSound(type);
 }
 
@@ -476,6 +502,9 @@ elements.languageMenu.addEventListener("click", (event) => {
   if (!option) return;
   state.lang = option.dataset.lang;
   localStorage.setItem("weather-language", state.lang);
+  const languageUrl = new URL(location.href);
+  languageUrl.searchParams.set("lang", state.lang);
+  history.replaceState(null, "", languageUrl);
   setLanguageMenu(false);
   applyLanguage();
   getWeather(state.lastQuery);
