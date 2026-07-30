@@ -240,28 +240,40 @@ body[data-period="night"] .icon-clouds .moon { opacity: 1; }
 .rain-far .rain-drop { filter: blur(.2px); }
 .rain-mid .rain-drop { filter: drop-shadow(0 0 .22rem var(--color-rain-drop)); }
 .rain-near .rain-drop { filter: drop-shadow(0 .15rem .32rem var(--color-rain-drop)); }
-.snow-layer { position: absolute; inset: -22%; display: block; will-change: transform; }
-.snow-layer {
-  background-image: radial-gradient(circle, var(--color-paper-soft) 0 .13rem, transparent .16rem);
-  background-repeat: repeat;
-  animation: scene-snow-fall 11s linear infinite;
+.snow-layer { position: absolute; inset: 0; display: block; overflow: hidden; }
+.snow-flake {
+  position: absolute; left: 0; top: -12vh;
+  width: var(--snow-size); height: var(--snow-size);
+  color: var(--color-paper); font-size: var(--snow-size); line-height: 1;
+  opacity: 0;
+  animation: scene-snow-fall var(--snow-duration) linear infinite;
+  animation-delay: var(--snow-delay);
+  will-change: transform, opacity;
 }
-.snow-far { --fall-distance: 7rem; --half-fall-distance: 3.5rem; --drift-distance: 1vw; background-size: 7rem 7rem; opacity: .32; animation-duration: 16s; }
-.snow-mid { --fall-distance: 5.4rem; --half-fall-distance: 2.7rem; --drift-distance: 2vw; background-size: 4.8rem 5.4rem; opacity: .52; animation-duration: 11s; animation-delay: -5s; }
-.snow-near { --fall-distance: 3.8rem; --half-fall-distance: 1.9rem; --drift-distance: 3vw; background-size: 3.3rem 3.8rem; opacity: .72; animation-duration: 7s; animation-delay: -2.5s; filter: blur(.2px); }
+.snow-flake i {
+  display: block; width: 100%; height: 100%; font-style: normal;
+  transform-origin: 50% 50%;
+  animation: snow-flake-spin var(--spin-duration) linear infinite;
+  animation-delay: var(--spin-delay);
+  will-change: transform;
+}
+.snow-far .snow-flake {
+  color: var(--color-paper);
+  filter: blur(.35px) drop-shadow(0 0 .18rem var(--color-paper));
+}
+.snow-mid .snow-flake {
+  filter: drop-shadow(0 0 .24rem var(--color-paper));
+}
+.snow-near .snow-flake {
+  filter: drop-shadow(0 0 .32rem var(--color-paper)) drop-shadow(0 .12rem .2rem var(--color-shadow));
+}
 body[data-weather="clouds"] .scene-cloud, body[data-weather="rain"] .scene-cloud, body[data-weather="thunderstorm"] .scene-cloud { opacity: .22; }
 body[data-weather="rain"][data-intensity="light"] .scene-rain { opacity: .78; }
 body[data-weather="rain"][data-intensity="moderate"] .scene-rain { opacity: .88; }
 body[data-weather="rain"][data-intensity="heavy"] .scene-rain, body[data-weather="thunderstorm"] .scene-rain { opacity: 1; }
-body[data-weather="snow"][data-intensity="light"] .scene-snow { opacity: .16; }
-body[data-weather="snow"][data-intensity="moderate"] .scene-snow { opacity: .3; }
-body[data-weather="snow"][data-intensity="heavy"] .scene-snow { opacity: .5; }
-body[data-weather="snow"][data-intensity="light"] .snow-far { --fall-distance: 9rem; --half-fall-distance: 4.5rem; background-size: 9rem 9rem; animation-duration: 22s; }
-body[data-weather="snow"][data-intensity="light"] .snow-mid { --fall-distance: 7.5rem; --half-fall-distance: 3.75rem; background-size: 7rem 7.5rem; animation-duration: 16s; }
-body[data-weather="snow"][data-intensity="light"] .snow-near { --fall-distance: 6rem; --half-fall-distance: 3rem; background-size: 5.5rem 6rem; animation-duration: 11s; }
-body[data-weather="snow"][data-intensity="heavy"] .snow-far { --fall-distance: 5rem; --half-fall-distance: 2.5rem; background-size: 5rem 5rem; animation-duration: 11s; }
-body[data-weather="snow"][data-intensity="heavy"] .snow-mid { --fall-distance: 3.7rem; --half-fall-distance: 1.85rem; background-size: 3.3rem 3.7rem; animation-duration: 7s; }
-body[data-weather="snow"][data-intensity="heavy"] .snow-near { --fall-distance: 2.7rem; --half-fall-distance: 1.35rem; background-size: 2.3rem 2.7rem; animation-duration: 4.5s; }
+body[data-weather="snow"][data-intensity="light"] .scene-snow { opacity: .68; }
+body[data-weather="snow"][data-intensity="moderate"] .scene-snow { opacity: .86; }
+body[data-weather="snow"][data-intensity="heavy"] .scene-snow { opacity: 1; }
 body[data-weather="rain"] .scene-orb, body[data-weather="thunderstorm"] .scene-orb, body[data-weather="atmosphere"] .scene-orb { opacity: 0; }
 
 @keyframes cloud-drift { from { transform: translateX(-8vw); } to { transform: translateX(115vw); } }
@@ -277,10 +289,14 @@ body[data-weather="rain"] .scene-orb, body[data-weather="thunderstorm"] .scene-o
   to { transform: translate3d(12vw, 122vh, 0); }
 }
 @keyframes scene-snow-fall {
-  0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-  50% { transform: translate3d(var(--drift-distance), var(--half-fall-distance), 0) rotate(3deg); }
-  100% { transform: translate3d(0, var(--fall-distance), 0) rotate(0deg); }
+  0% { opacity: 0; transform: translate3d(var(--snow-x), -10vh, 0); }
+  8% { opacity: var(--snow-opacity); }
+  38% { transform: translate3d(calc(var(--snow-x) + var(--snow-sway)), 38vh, 0); }
+  68% { transform: translate3d(calc(var(--snow-x) + var(--snow-sway-back)), 78vh, 0); }
+  92% { opacity: var(--snow-opacity); }
+  100% { opacity: 0; transform: translate3d(calc(var(--snow-x) + var(--snow-sway-end)), 122vh, 0); }
 }
+@keyframes snow-flake-spin { to { transform: rotate(var(--snow-turns)); } }
 @keyframes lightning { 0%, 88%, 100% { opacity: .15; } 90%, 94% { opacity: 1; } }
 @keyframes sound-wave { from { transform: scaleY(.55); } to { transform: scaleY(1.2); } }
 

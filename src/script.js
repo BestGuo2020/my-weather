@@ -104,6 +104,47 @@ function populateRain(intensity) {
   });
 }
 
+function populateSnow(intensity) {
+  const scene = $(".scene-snow");
+  if (scene.dataset.intensity === intensity) return;
+  scene.dataset.intensity = intensity;
+  const totals = { light: 42, moderate: 68, heavy: 96 };
+  const layers = [
+    { selector: ".snow-far", share: .34, size: .48, duration: 15, opacity: .42 },
+    { selector: ".snow-mid", share: .38, size: .76, duration: 10.5, opacity: .7 },
+    { selector: ".snow-near", share: .28, size: 1.08, duration: 7.5, opacity: .94 }
+  ];
+  const shapes = ["❄", "❅", "❆"];
+  layers.forEach((config) => {
+    const layer = $(config.selector);
+    layer.replaceChildren();
+    const count = Math.round(totals[intensity] * config.share);
+    for (let index = 0; index < count; index += 1) {
+      const flake = document.createElement("span");
+      const shape = document.createElement("i");
+      const duration = config.duration * (.78 + Math.random() * .44);
+      const size = config.size * (.68 + Math.random() * .64);
+      const sway = size * (1.1 + Math.random() * 2.2);
+      const turns = (Math.random() > .5 ? 1 : -1) * (1 + Math.floor(Math.random() * 2));
+      flake.className = "snow-flake";
+      flake.style.setProperty("--snow-x", `${(Math.random() * 104 - 2).toFixed(2)}vw`);
+      flake.style.setProperty("--snow-size", `${size.toFixed(2)}rem`);
+      flake.style.setProperty("--snow-duration", `${duration.toFixed(2)}s`);
+      flake.style.setProperty("--snow-delay", `${(-Math.random() * duration).toFixed(2)}s`);
+      flake.style.setProperty("--snow-sway", `${sway.toFixed(2)}rem`);
+      flake.style.setProperty("--snow-sway-back", `${(-sway * .45).toFixed(2)}rem`);
+      flake.style.setProperty("--snow-sway-end", `${(sway * .25).toFixed(2)}rem`);
+      flake.style.setProperty("--snow-opacity", `${(config.opacity * (.72 + Math.random() * .28)).toFixed(2)}`);
+      flake.style.setProperty("--snow-turns", `${turns}turn`);
+      shape.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+      shape.style.setProperty("--spin-duration", `${(3.8 + Math.random() * 5.6).toFixed(2)}s`);
+      shape.style.setProperty("--spin-delay", `${(-Math.random() * 6).toFixed(2)}s`);
+      flake.append(shape);
+      layer.append(flake);
+    }
+  });
+}
+
 function updateDate(timestamp = Date.now() / 1000, timezone = 0) {
   const utcMs = (timestamp + timezone) * 1000;
   elements.date.textContent = new Intl.DateTimeFormat(localeMap[state.lang], {
@@ -120,6 +161,7 @@ function renderWeather(data) {
   document.body.dataset.intensity = intensity;
   elements.icon.className = `weather-icon icon-${type} intensity-${intensity}`;
   if (type === "rain" || type === "drizzle" || type === "thunderstorm") populateRain(intensity);
+  if (type === "snow") populateSnow(intensity);
   const fallbackName = placeNameFallbacks[state.lang]?.[data.name];
   elements.city.textContent = `${state.placeName || fallbackName || data.name}, ${data.sys.country}`;
   updateDate(data.dt, data.timezone);
