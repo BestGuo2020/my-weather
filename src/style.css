@@ -89,6 +89,11 @@ body[data-weather="atmosphere"] { background: linear-gradient(155deg, var(--colo
   cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .control-button { width: 3rem; }
+.github-button {
+  display: grid; place-items: center; flex: 0 0 auto;
+  color: var(--color-paper); font-size: var(--text-xs); font-weight: 800;
+  letter-spacing: -.04em; text-decoration: none;
+}
 .control-button:hover, .language-button:hover { background: var(--color-glass-strong); }
 .control-button:active { transform: translateY(1px); }
 .control-button:disabled, .language-button:disabled { opacity: .55; cursor: not-allowed; }
@@ -282,7 +287,9 @@ body[data-weather="rain"] .scene-orb, body[data-weather="thunderstorm"] .scene-o
 @media (max-width: 40rem) {
   .toolbar { padding-top: var(--space-lg); flex-wrap: wrap; }
   .search-form { width: 100%; }
-  .controls { width: 100%; justify-content: center; }
+  .controls { width: 100%; justify-content: center; gap: var(--space-2xs); }
+  .control-button { width: 2.75rem; min-height: 2.75rem; }
+  .language-button { min-width: 6rem; min-height: 2.75rem; }
   main { padding-inline: var(--space-md); padding-top: var(--space-md); }
   .weather-icon { margin-top: var(--space-md); transform: scale(.88); transform-origin: bottom center; }
   .current .temp { margin-top: 0; }

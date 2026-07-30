@@ -3,7 +3,16 @@
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
-const IP_GEO_URL = "https://ipwho.is/";
+const IP_GEO_PROVIDERS = [
+  {
+    url: "https://ipwho.is/",
+    parse: (data) => ({ success: data.success !== false, latitude: data.latitude, longitude: data.longitude })
+  },
+  {
+    url: "https://ipapi.co/json/",
+    parse: (data) => ({ success: !data.error, latitude: data.latitude, longitude: data.longitude })
+  }
+];
 const REFRESH_INTERVAL = 12 * 60 * 1000;
 const languageNames = { zh_cn: "中文", en: "English", es: "Español", fr: "Français", ja: "日本語" };
 const placeNameFallbacks = {
@@ -20,7 +29,7 @@ const translations = {
 };
 
 const localeMap = { zh_cn: "zh-CN", en: "en-GB", es: "es-ES", fr: "fr-FR", ja: "ja-JP" };
-const state = { lang: localStorage.getItem("weather-language") || "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", updatedAt: null, refreshTimer: null };
+const state = { lang: localStorage.getItem("weather-language") || "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", updatedAt: null, refreshTimer: null, locationRequestId: 0 };
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   form: $(".search-form"), input: $("#city-search"), locate: $("#location-button"), languageButton: $("#language-button"),
@@ -178,44 +187,62 @@ async function getWeather(params) {
 }
 
 async function getIpCoordinates() {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 8000);
-  try {
-    const response = await fetch(IP_GEO_URL, { signal: controller.signal });
-    if (!response.ok) throw new Error("ipLocationFailed");
-    const data = await response.json();
-    const latitude = Number(data.latitude);
-    const longitude = Number(data.longitude);
-    if (data.success === false || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      throw new Error("ipLocationFailed");
+  for (const provider of IP_GEO_PROVIDERS) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
+    try {
+      const response = await fetch(provider.url, { signal: controller.signal });
+      if (!response.ok) continue;
+      const location = provider.parse(await response.json());
+      const latitude = Number(location.latitude);
+      const longitude = Number(location.longitude);
+      if (location.success && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        return { lat: latitude.toFixed(5), lon: longitude.toFixed(5) };
+      }
+    } catch {
+      // Try the next IP provider.
+    } finally {
+      window.clearTimeout(timeout);
     }
-    return { lat: latitude.toFixed(5), lon: longitude.toFixed(5) };
-  } finally {
-    window.clearTimeout(timeout);
   }
+  throw new Error("ipLocationFailed");
 }
 
-async function locateByIp(fallbackToDefault) {
+function getGpsCoordinates() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("gpsUnavailable"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve({ lat: coords.latitude.toFixed(5), lon: coords.longitude.toFixed(5) }),
+      () => reject(new Error("gpsUnavailable")),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  });
+}
+
+async function useLocation(options = {}) {
+  const fallbackToDefault = options.fallbackToDefault === true;
+  const requestId = ++state.locationRequestId;
+  elements.locate.disabled = true;
   elements.status.textContent = t("locating");
   try {
-    const coordinates = await getIpCoordinates();
+    let coordinates;
+    try {
+      coordinates = await getGpsCoordinates();
+    } catch {
+      coordinates = await getIpCoordinates();
+    }
+    if (requestId !== state.locationRequestId) return;
     await getWeather(coordinates);
   } catch {
+    if (requestId !== state.locationRequestId) return;
     if (fallbackToDefault) await getWeather(state.lastQuery);
     else elements.status.textContent = t("locationDenied");
+  } finally {
+    if (requestId === state.locationRequestId) elements.locate.disabled = false;
   }
-}
-
-function useLocation(options = {}) {
-  const fallbackToDefault = options.fallbackToDefault === true;
-  const handleFailure = () => locateByIp(fallbackToDefault);
-  if (!navigator.geolocation) { locateByIp(fallbackToDefault); return; }
-  elements.status.textContent = t("locating");
-  navigator.geolocation.getCurrentPosition(
-    ({ coords }) => getWeather({ lat: coords.latitude.toFixed(5), lon: coords.longitude.toFixed(5) }),
-    handleFailure,
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-  );
 }
 
 let audio = null;
