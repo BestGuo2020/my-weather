@@ -132,4 +132,6 @@ Open-Meteo geocoding data is based on GeoNames. Review each provider's attributi
 
 ## License
 
-No license is currently declared in this repository. Unless a license is added, normal copyright restrictions apply.
+This project is released under the [MIT License](./LICENSE).
+
+You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, provided that the original copyright notice and license notice are retained.
