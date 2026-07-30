@@ -3,6 +3,7 @@
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
+const OPEN_METEO_GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const IP_GEO_PROVIDERS = [
   {
     url: "https://ipwho.is/",
@@ -21,22 +22,23 @@ const placeNameFallbacks = {
 };
 
 const translations = {
-  zh_cn: { searchLabel: "搜索城市", searchPlaceholder: "搜索城市或国家…", searchButton: "搜索", useLocation: "使用我的位置", languageLabel: "语言", soundOn: "开启天气白噪音", soundOff: "关闭天气白噪音", enterFullscreen: "进入全屏", exitFullscreen: "退出全屏", lastUpdated: "最后更新", feelsLike: "体感", humidity: "湿度", wind: "风速", poweredBy: "天气数据来自 OpenWeather，Designed By BestGuo2020", loading: "正在获取天气…", locating: "正在获取你的位置…", notFound: "未找到这个地点，请检查拼写。", apiError: "天气服务暂时不可用，请稍后重试。", locationDenied: "无法获取位置，请允许定位权限或手动搜索。", clear: "晴", clouds: "多云", rain: "雨", drizzle: "细雨", thunderstorm: "雷暴", snow: "雪", atmosphere: "雾霾" },
-  en: { searchLabel: "Search for a city", searchPlaceholder: "Search city or country…", searchButton: "Search", useLocation: "Use my location", languageLabel: "Language", soundOn: "Play weather noise", soundOff: "Mute weather noise", enterFullscreen: "Enter fullscreen", exitFullscreen: "Exit fullscreen", lastUpdated: "Last updated", feelsLike: "Feels", humidity: "Humidity", wind: "Wind", poweredBy: "Weather data by OpenWeather，Designed By BestGuo2020", loading: "Fetching weather…", locating: "Finding your location…", notFound: "Place not found. Check the spelling.", apiError: "Weather service is unavailable. Try again later.", locationDenied: "Location unavailable. Allow access or search manually.", clear: "Clear", clouds: "Cloudy", rain: "Rain", drizzle: "Drizzle", thunderstorm: "Thunderstorm", snow: "Snow", atmosphere: "Mist" },
-  es: { searchLabel: "Buscar ciudad", searchPlaceholder: "Buscar ciudad o país…", searchButton: "Buscar", useLocation: "Usar mi ubicación", languageLabel: "Idioma", soundOn: "Activar ruido del clima", soundOff: "Silenciar ruido del clima", enterFullscreen: "Pantalla completa", exitFullscreen: "Salir de pantalla completa", lastUpdated: "Última actualización", feelsLike: "Sensación", humidity: "Humedad", wind: "Viento", poweredBy: "Datos meteorológicos de OpenWeather，Designed By BestGuo2020", loading: "Consultando el tiempo…", locating: "Buscando tu ubicación…", notFound: "No encontramos ese lugar.", apiError: "El servicio no está disponible.", locationDenied: "No se pudo obtener la ubicación.", clear: "Despejado", clouds: "Nublado", rain: "Lluvia", drizzle: "Llovizna", thunderstorm: "Tormenta", snow: "Nieve", atmosphere: "Niebla" },
-  fr: { searchLabel: "Rechercher une ville", searchPlaceholder: "Ville ou pays…", searchButton: "Rechercher", useLocation: "Utiliser ma position", languageLabel: "Langue", soundOn: "Activer le bruit météo", soundOff: "Couper le bruit météo", enterFullscreen: "Plein écran", exitFullscreen: "Quitter le plein écran", lastUpdated: "Dernière mise à jour", feelsLike: "Ressenti", humidity: "Humidité", wind: "Vent", poweredBy: "Données météo par OpenWeather，Designed By BestGuo2020", loading: "Chargement de la météo…", locating: "Recherche de votre position…", notFound: "Lieu introuvable.", apiError: "Service météo indisponible.", locationDenied: "Position indisponible.", clear: "Ciel dégagé", clouds: "Nuageux", rain: "Pluie", drizzle: "Bruine", thunderstorm: "Orage", snow: "Neige", atmosphere: "Brume" },
-  ja: { searchLabel: "都市を検索", searchPlaceholder: "都市または国を検索…", searchButton: "検索", useLocation: "現在地を使う", languageLabel: "言語", soundOn: "天気の環境音を再生", soundOff: "環境音を停止", enterFullscreen: "全画面表示", exitFullscreen: "全画面表示を終了", lastUpdated: "最終更新", feelsLike: "体感", humidity: "湿度", wind: "風速", poweredBy: "気象データ：OpenWeather，Designed By BestGuo2020", loading: "天気を取得中…", locating: "現在地を取得中…", notFound: "場所が見つかりません。", apiError: "気象サービスを利用できません。", locationDenied: "位置情報を取得できません。", clear: "晴れ", clouds: "曇り", rain: "雨", drizzle: "霧雨", thunderstorm: "雷雨", snow: "雪", atmosphere: "霧" }
+  zh_cn: { searchLabel: "搜索城市", searchPlaceholder: "搜索城市或国家…", searchButton: "搜索", chooseLocation: "请选择地点", useLocation: "使用我的位置", languageLabel: "语言", soundOn: "开启天气白噪音", soundOff: "关闭天气白噪音", enterFullscreen: "进入全屏", exitFullscreen: "退出全屏", lastUpdated: "最后更新", feelsLike: "体感", humidity: "湿度", wind: "风速", poweredBy: "天气数据来自 OpenWeather，Designed By BestGuo2020", loading: "正在获取天气…", locating: "正在获取你的位置…", notFound: "未找到这个地点，请检查拼写。", apiError: "天气服务暂时不可用，请稍后重试。", locationDenied: "无法获取位置，请允许定位权限或手动搜索。", clear: "晴", clouds: "多云", rain: "雨", drizzle: "细雨", thunderstorm: "雷暴", snow: "雪", atmosphere: "雾霾" },
+  en: { searchLabel: "Search for a city", searchPlaceholder: "Search city or country…", searchButton: "Search", chooseLocation: "Choose a location", useLocation: "Use my location", languageLabel: "Language", soundOn: "Play weather noise", soundOff: "Mute weather noise", enterFullscreen: "Enter fullscreen", exitFullscreen: "Exit fullscreen", lastUpdated: "Last updated", feelsLike: "Feels", humidity: "Humidity", wind: "Wind", poweredBy: "Weather data by OpenWeather，Designed By BestGuo2020", loading: "Fetching weather…", locating: "Finding your location…", notFound: "Place not found. Check the spelling.", apiError: "Weather service is unavailable. Try again later.", locationDenied: "Location unavailable. Allow access or search manually.", clear: "Clear", clouds: "Cloudy", rain: "Rain", drizzle: "Drizzle", thunderstorm: "Thunderstorm", snow: "Snow", atmosphere: "Mist" },
+  es: { searchLabel: "Buscar ciudad", searchPlaceholder: "Buscar ciudad o país…", searchButton: "Buscar", chooseLocation: "Elige una ubicación", useLocation: "Usar mi ubicación", languageLabel: "Idioma", soundOn: "Activar ruido del clima", soundOff: "Silenciar ruido del clima", enterFullscreen: "Pantalla completa", exitFullscreen: "Salir de pantalla completa", lastUpdated: "Última actualización", feelsLike: "Sensación", humidity: "Humedad", wind: "Viento", poweredBy: "Datos meteorológicos de OpenWeather，Designed By BestGuo2020", loading: "Consultando el tiempo…", locating: "Buscando tu ubicación…", notFound: "No encontramos ese lugar.", apiError: "El servicio no está disponible.", locationDenied: "No se pudo obtener la ubicación.", clear: "Despejado", clouds: "Nublado", rain: "Lluvia", drizzle: "Llovizna", thunderstorm: "Tormenta", snow: "Nieve", atmosphere: "Niebla" },
+  fr: { searchLabel: "Rechercher une ville", searchPlaceholder: "Ville ou pays…", searchButton: "Rechercher", chooseLocation: "Choisissez un lieu", useLocation: "Utiliser ma position", languageLabel: "Langue", soundOn: "Activer le bruit météo", soundOff: "Couper le bruit météo", enterFullscreen: "Plein écran", exitFullscreen: "Quitter le plein écran", lastUpdated: "Dernière mise à jour", feelsLike: "Ressenti", humidity: "Humidité", wind: "Vent", poweredBy: "Données météo par OpenWeather，Designed By BestGuo2020", loading: "Chargement de la météo…", locating: "Recherche de votre position…", notFound: "Lieu introuvable.", apiError: "Service météo indisponible.", locationDenied: "Position indisponible.", clear: "Ciel dégagé", clouds: "Nuageux", rain: "Pluie", drizzle: "Bruine", thunderstorm: "Orage", snow: "Neige", atmosphere: "Brume" },
+  ja: { searchLabel: "都市を検索", searchPlaceholder: "都市または国を検索…", searchButton: "検索", chooseLocation: "場所を選択", useLocation: "現在地を使う", languageLabel: "言語", soundOn: "天気の環境音を再生", soundOff: "環境音を停止", enterFullscreen: "全画面表示", exitFullscreen: "全画面表示を終了", lastUpdated: "最終更新", feelsLike: "体感", humidity: "湿度", wind: "風速", poweredBy: "気象データ：OpenWeather，Designed By BestGuo2020", loading: "天気を取得中…", locating: "現在地を取得中…", notFound: "場所が見つかりません。", apiError: "気象サービスを利用できません。", locationDenied: "位置情報を取得できません。", clear: "晴れ", clouds: "曇り", rain: "雨", drizzle: "霧雨", thunderstorm: "雷雨", snow: "雪", atmosphere: "霧" }
 };
 
 const localeMap = { zh_cn: "zh-CN", en: "en-GB", es: "es-ES", fr: "fr-FR", ja: "ja-JP" };
-const state = { lang: localStorage.getItem("weather-language") || "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", updatedAt: null, refreshTimer: null, locationRequestId: 0 };
+const state = { lang: localStorage.getItem("weather-language") || "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0 };
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   form: $(".search-form"), input: $("#city-search"), locate: $("#location-button"), languageButton: $("#language-button"),
   languageMenu: $("#language-menu"), languageCurrent: $("#language-current"), fullscreen: $("#fullscreen-button"),
   sound: $("#sound-button"), city: $("#city"), date: $("#date"), temp: $("#temp"), weather: $("#weather"),
   hiLow: $("#hi-low"), feels: $("#feels-like"), humidity: $("#humidity"), wind: $("#wind"),
-  icon: $("#weather-icon"), status: $("#status"), updated: $("#updated-time")
+  icon: $("#weather-icon"), status: $("#status"), updated: $("#updated-time"),
+  placeMenu: $("#place-menu"), placeOptions: $("#place-options")
 };
 
 function t(key) { return translations[state.lang][key] || translations.en[key] || key; }
@@ -48,6 +50,7 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-title]").forEach((node) => { node.title = t(node.dataset.i18nTitle); });
   document.querySelectorAll("[data-i18n-aria]").forEach((node) => { node.setAttribute("aria-label", t(node.dataset.i18nAria)); });
+  elements.placeMenu.setAttribute("aria-label", t("chooseLocation"));
   elements.languageCurrent.textContent = languageNames[state.lang];
   elements.languageMenu.querySelectorAll("[data-lang]").forEach((button) => {
     button.setAttribute("aria-selected", String(button.dataset.lang === state.lang));
@@ -179,41 +182,149 @@ function renderWeather(data) {
   if (state.sound) restartWeatherSound(type);
 }
 
-async function getLocalizedPlace(params, signal) {
+function localizedPlace(place) {
+  const language = localeMap[state.lang].split("-")[0];
+  const localizedName = place.local_names?.[state.lang] || place.local_names?.[language];
+  return {
+    lat: place.lat,
+    lon: place.lon,
+    name: localizedName || placeNameFallbacks[state.lang]?.[place.name] || place.name,
+    searchName: place.name,
+    state: place.state || "",
+    country: place.country || ""
+  };
+}
+
+async function getOpenWeatherPlaces(params, signal) {
   try {
     const endpoint = params.q ? "direct" : "reverse";
-    const query = new URLSearchParams({ ...params, limit: "1", appid: API_KEY });
+    const query = new URLSearchParams({ ...params, limit: params.q ? "5" : "1", appid: API_KEY });
     const response = await fetch(`${GEO_URL}/${endpoint}?${query}`, { signal });
-    if (!response.ok) return null;
+    if (!response.ok) return [];
     const places = await response.json();
-    const place = places[0];
-    if (!place) return null;
-    const localizedName = place.local_names?.[state.lang] || place.local_names?.[localeMap[state.lang].split("-")[0]];
-    return {
-      lat: place.lat,
-      lon: place.lon,
-      name: localizedName || placeNameFallbacks[state.lang]?.[place.name] || place.name
-    };
+    return places.map(localizedPlace);
   } catch {
-    return null;
+    return [];
   }
 }
 
-async function getWeather(params) {
+async function getOpenMeteoPlaces(search, signal) {
+  try {
+    const parts = search.split(",").map((part) => part.trim()).filter(Boolean);
+    const lastPart = parts[parts.length - 1] || "";
+    const countryCode = /^[a-z]{2}$/i.test(lastPart) ? parts.pop().toUpperCase() : "";
+    const query = new URLSearchParams({
+      name: parts[0] || search,
+      count: "50",
+      language: localeMap[state.lang].split("-")[0],
+      format: "json"
+    });
+    if (countryCode) query.set("countryCode", countryCode);
+    const response = await fetch(`${OPEN_METEO_GEO_URL}?${query}`, { signal });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return (data.results || []).map((place) => ({
+      lat: place.latitude,
+      lon: place.longitude,
+      name: place.name,
+      searchName: place.name,
+      state: place.admin1 || place.admin2 || "",
+      country: place.country_code || ""
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function getPlaces(params, signal) {
+  const sources = params.q
+    ? await Promise.all([getOpenWeatherPlaces(params, signal), getOpenMeteoPlaces(params.q, signal)])
+    : [await getOpenWeatherPlaces(params, signal)];
+  const unique = new Map();
+  sources.flat().forEach((place) => {
+      const key = [place.name, place.state, place.country]
+        .map((part) => part.trim().toLocaleLowerCase())
+        .join("|");
+      if (!unique.has(key)) unique.set(key, place);
+  });
+  const places = [...unique.values()];
+  if (!params.q) return places;
+
+  const searchTerm = params.q.split(",")[0].normalize("NFKC").trim().toLocaleLowerCase();
+  const relevance = (place) => {
+    const names = [place.name, place.searchName]
+      .filter(Boolean)
+      .map((name) => name.normalize("NFKC").trim().toLocaleLowerCase());
+    if (names.some((name) => name === searchTerm)) return 0;
+    if (names.some((name) => name.includes(searchTerm) || searchTerm.includes(name))) return 1;
+    return 2;
+  };
+  const ranked = places.map((place) => ({ place, rank: relevance(place) }));
+  const hasRelevantMatch = ranked.some(({ rank }) => rank < 2);
+  return ranked
+    .filter(({ rank }) => !hasRelevantMatch || rank < 2)
+    .sort((a, b) => a.rank - b.rank)
+    .map(({ place }) => place);
+}
+
+function closePlaceMenu() {
+  elements.placeMenu.hidden = true;
+  elements.placeOptions.replaceChildren();
+  state.pendingPlaces = [];
+}
+
+function countryName(code) {
+  if (!code) return "";
+  try {
+    return new Intl.DisplayNames([localeMap[state.lang]], { type: "region" }).of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
+function showPlaceMenu(places) {
+  state.pendingPlaces = places;
+  const fragment = document.createDocumentFragment();
+  places.forEach((place, index) => {
+    const button = document.createElement("button");
+    const name = document.createElement("span");
+    const region = document.createElement("span");
+    button.type = "button";
+    button.dataset.placeIndex = String(index);
+    button.setAttribute("role", "option");
+    name.className = "place-name";
+    name.textContent = place.name;
+    region.className = "place-region";
+    region.textContent = [place.state, countryName(place.country), place.country].filter(Boolean).join(" · ");
+    button.append(name, region);
+    fragment.append(button);
+  });
+  elements.placeOptions.replaceChildren(fragment);
+  elements.placeMenu.hidden = false;
+  elements.status.textContent = t("chooseLocation");
+}
+
+async function getWeather(params, selectedPlace = null) {
   elements.status.textContent = t("loading");
   elements.input.disabled = true;
   elements.locate.disabled = true;
+  closePlaceMenu();
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
   try {
-    const place = await getLocalizedPlace(params, controller.signal);
+    const places = selectedPlace ? [selectedPlace] : await getPlaces(params, controller.signal);
+    if (params.q && places.length > 1) {
+      showPlaceMenu(places);
+      return;
+    }
+    const place = places[0] || null;
     const weatherParams = place ? { lat: place.lat, lon: place.lon } : params;
     state.placeName = place?.name || "";
     const query = new URLSearchParams({ ...weatherParams, appid: API_KEY, units: "metric", lang: state.lang });
     const response = await fetch(`${API_URL}?${query}`, { signal: controller.signal });
     if (!response.ok) throw new Error(response.status === 404 ? "notFound" : "apiError");
     state.data = await response.json();
-    state.lastQuery = params;
+    state.lastQuery = place ? { lat: place.lat, lon: place.lon } : params;
     state.updatedAt = new Date();
     renderWeather(state.data);
     window.clearTimeout(state.refreshTimer);
@@ -348,6 +459,14 @@ elements.form.addEventListener("submit", (event) => {
   const q = elements.input.value.trim();
   if (q) getWeather({ q });
 });
+elements.placeMenu.addEventListener("click", (event) => {
+  const option = event.target.closest("[data-place-index]");
+  if (!option) return;
+  const place = state.pendingPlaces[Number(option.dataset.placeIndex)];
+  if (!place) return;
+  elements.input.value = "";
+  getWeather({ lat: place.lat, lon: place.lon }, place);
+});
 elements.locate.addEventListener("click", () => useLocation());
 elements.languageButton.addEventListener("click", () => {
   setLanguageMenu(elements.languageButton.getAttribute("aria-expanded") !== "true");
@@ -363,9 +482,13 @@ elements.languageMenu.addEventListener("click", (event) => {
 });
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".language-control")) setLanguageMenu(false);
+  if (!event.target.closest(".search-form")) closePlaceMenu();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") setLanguageMenu(false);
+  if (event.key === "Escape") {
+    setLanguageMenu(false);
+    closePlaceMenu();
+  }
 });
 elements.sound.addEventListener("click", () => {
   state.sound = !state.sound;

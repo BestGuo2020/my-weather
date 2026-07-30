@@ -81,7 +81,43 @@ body[data-weather="atmosphere"] { background: linear-gradient(155deg, var(--colo
 }
 .search-button:hover, .search-button:active { background: var(--color-glass); }
 .search-button:active { transform: translateY(1px); }
-.search-button:focus-visible, .control-button:focus-visible, .language-button:focus-visible, .language-menu button:focus-visible { outline-color: var(--color-focus); }
+.search-button:focus-visible, .control-button:focus-visible, .language-button:focus-visible, .language-menu button:focus-visible, .place-menu button:focus-visible { outline-color: var(--color-focus); }
+.place-menu {
+  position: absolute; z-index: 12; top: calc(100% + var(--space-xs)); left: 0; right: 0;
+  overflow: hidden;
+  padding: var(--space-xs); border: 1px solid var(--color-glass-strong);
+  border-radius: 1.25rem; color: var(--color-ink); background: var(--color-paper-soft);
+  box-shadow: 0 .75rem 2rem var(--color-shadow); backdrop-filter: blur(1rem);
+}
+.place-options {
+  max-height: calc(min(22rem, 55vh) - var(--space-md));
+  margin-right: var(--space-xs);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-soft) transparent;
+}
+.place-options::-webkit-scrollbar { width: .45rem; }
+.place-options::-webkit-scrollbar-track {
+  margin-block: .8rem;
+  background: transparent;
+}
+.place-options::-webkit-scrollbar-thumb {
+  border: .12rem solid transparent;
+  border-radius: var(--radius-round);
+  background: var(--color-ink-soft);
+  background-clip: padding-box;
+}
+.place-options::-webkit-scrollbar-thumb:hover { background-color: var(--color-ink); }
+.place-menu[hidden] { display: none; }
+.place-options button {
+  width: 100%; min-height: 3rem; padding: var(--space-xs) var(--space-sm);
+  border: 0; border-radius: .85rem; outline: 2px solid transparent; outline-offset: -2px;
+  color: var(--color-ink); background: transparent; text-align: left; cursor: pointer;
+}
+.place-options button + button { margin-top: var(--space-2xs); }
+.place-options button:hover { background: var(--color-glass-strong); }
+.place-name { display: block; font-weight: 700; }
+.place-region { display: block; margin-top: .1rem; color: var(--color-ink-soft); font-size: var(--text-xs); }
 .controls { display: flex; align-items: center; gap: var(--space-xs); }
 .control-button, .language-button {
   min-height: 3rem; border: 1px solid transparent; outline: 2px solid transparent; outline-offset: 1px;

@@ -33,6 +33,9 @@
         <button class="search-button" type="submit" data-i18n-aria="searchButton" aria-label="搜索">
           <span aria-hidden="true"></span>
         </button>
+        <div id="place-menu" class="place-menu" role="listbox" aria-label="选择地点" hidden>
+          <div id="place-options" class="place-options"></div>
+        </div>
       </form>
 
       <div class="controls">
@@ -104,6 +107,7 @@
 
     <footer>
       <span data-i18n="poweredBy">天气数据来自 OpenWeather</span>
+      <span> · Geocoding by Open-Meteo</span>
     </footer>
   </div>
   <script src="./script.js"></script>
