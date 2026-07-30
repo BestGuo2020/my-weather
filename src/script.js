@@ -3,6 +3,7 @@
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
+const IP_GEO_URL = "https://ipwho.is/";
 const REFRESH_INTERVAL = 12 * 60 * 1000;
 const languageNames = { zh_cn: "中文", en: "English", es: "Español", fr: "Français", ja: "日本語" };
 const placeNameFallbacks = {
@@ -176,13 +177,39 @@ async function getWeather(params) {
   }
 }
 
+async function getIpCoordinates() {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(IP_GEO_URL, { signal: controller.signal });
+    if (!response.ok) throw new Error("ipLocationFailed");
+    const data = await response.json();
+    const latitude = Number(data.latitude);
+    const longitude = Number(data.longitude);
+    if (data.success === false || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      throw new Error("ipLocationFailed");
+    }
+    return { lat: latitude.toFixed(5), lon: longitude.toFixed(5) };
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+async function locateByIp(fallbackToDefault) {
+  elements.status.textContent = t("locating");
+  try {
+    const coordinates = await getIpCoordinates();
+    await getWeather(coordinates);
+  } catch {
+    if (fallbackToDefault) await getWeather(state.lastQuery);
+    else elements.status.textContent = t("locationDenied");
+  }
+}
+
 function useLocation(options = {}) {
   const fallbackToDefault = options.fallbackToDefault === true;
-  const handleFailure = () => {
-    if (fallbackToDefault) getWeather(state.lastQuery);
-    else elements.status.textContent = t("locationDenied");
-  };
-  if (!navigator.geolocation) { handleFailure(); return; }
+  const handleFailure = () => locateByIp(fallbackToDefault);
+  if (!navigator.geolocation) { locateByIp(fallbackToDefault); return; }
   elements.status.textContent = t("locating");
   navigator.geolocation.getCurrentPosition(
     ({ coords }) => getWeather({ lat: coords.latitude.toFixed(5), lon: coords.longitude.toFixed(5) }),
