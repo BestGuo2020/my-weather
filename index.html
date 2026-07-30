@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#274b67">
+  <title>Weather</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-weather="clear" data-period="day">
+  <div class="weather-scene" aria-hidden="true">
+    <span class="scene-orb"></span>
+    <span class="scene-cloud scene-cloud-a"></span>
+    <span class="scene-cloud scene-cloud-b"></span>
+    <span class="scene-rain">
+      <i class="rain-layer rain-far"></i>
+      <i class="rain-layer rain-mid"></i>
+      <i class="rain-layer rain-near"></i>
+    </span>
+    <span class="scene-snow">
+      <i class="snow-layer snow-far"></i>
+      <i class="snow-layer snow-mid"></i>
+      <i class="snow-layer snow-near"></i>
+    </span>
+  </div>
+
+  <div class="app-wrap">
+    <header class="toolbar">
+      <form class="search-form" role="search">
+        <label class="sr-only" for="city-search" data-i18n="searchLabel">搜索城市</label>
+        <input id="city-search" type="search" autocomplete="off" class="search-box"
+          placeholder="搜索城市或国家…" data-i18n-placeholder="searchPlaceholder">
+        <button class="search-button" type="submit" data-i18n-aria="searchButton" aria-label="搜索">
+          <span aria-hidden="true"></span>
+        </button>
+      </form>
+
+      <div class="controls">
+        <button id="location-button" class="control-button" type="button" data-i18n-title="useLocation"
+          data-i18n-aria="useLocation" title="使用我的位置" aria-label="使用我的位置">
+          <span class="location-mark" aria-hidden="true"></span>
+        </button>
+        <div class="language-control">
+          <button id="language-button" class="language-button" type="button" aria-haspopup="listbox"
+            aria-expanded="false" aria-controls="language-menu">
+            <span id="language-current">中文</span><span class="select-chevron" aria-hidden="true"></span>
+          </button>
+          <div id="language-menu" class="language-menu" role="listbox" data-i18n-aria="languageLabel"
+            aria-label="语言" hidden>
+            <button type="button" role="option" data-lang="zh_cn" aria-selected="true">中文</button>
+            <button type="button" role="option" data-lang="en" aria-selected="false">English</button>
+            <button type="button" role="option" data-lang="es" aria-selected="false">Español</button>
+            <button type="button" role="option" data-lang="fr" aria-selected="false">Français</button>
+            <button type="button" role="option" data-lang="ja" aria-selected="false">日本語</button>
+          </div>
+        </div>
+        <button id="sound-button" class="control-button" type="button" aria-pressed="false"
+          data-i18n-title="soundOn" data-i18n-aria="soundOn" title="开启天气白噪音" aria-label="开启天气白噪音">
+          <span class="sound-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
+        <button id="fullscreen-button" class="control-button" type="button"
+          data-i18n-title="enterFullscreen" data-i18n-aria="enterFullscreen"
+          title="进入全屏" aria-label="进入全屏">
+          <span class="fullscreen-mark" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="location" aria-live="polite">
+        <div class="city" id="city">Northampton, GB</div>
+        <div class="date" id="date">—</div>
+      </section>
+
+      <section class="current" aria-live="polite">
+        <div id="weather-icon" class="weather-icon icon-clear" aria-hidden="true">
+          <span class="sun"></span>
+          <span class="moon"></span>
+          <span class="cloud cloud-back"></span>
+          <span class="cloud cloud-front"></span>
+          <span class="drops"></span>
+          <span class="flakes"></span>
+          <span class="bolt"></span>
+          <span class="mist-lines"></span>
+        </div>
+        <div class="temp" id="temp">15<span>°c</span></div>
+        <div class="weather" id="weather">晴</div>
+        <div class="hi-low" id="hi-low">13°c / 16°c</div>
+        <div class="details">
+          <span><b data-i18n="feelsLike">体感</b> <i id="feels-like">15°c</i></span>
+          <span><b data-i18n="humidity">湿度</b> <i id="humidity">—</i></span>
+          <span><b data-i18n="wind">风速</b> <i id="wind">—</i></span>
+        </div>
+      </section>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <p class="updated"><span data-i18n="lastUpdated">最后更新</span> <time id="updated-time">—</time></p>
+    </main>
+
+    <footer>
+      <span data-i18n="poweredBy">天气数据来自 OpenWeather</span>
+    </footer>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

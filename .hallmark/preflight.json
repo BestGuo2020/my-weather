@@ -1,0 +1,10 @@
+{
+  "date": "2026-07-30",
+  "source": "raw",
+  "font": "Montserrat-style sans serif",
+  "palette": "white type, amber accent, dark photographic overlay",
+  "motion": "CSS transitions only",
+  "spacing": "informal",
+  "framework": "vanilla HTML/CSS/JavaScript",
+  "preserved": ["single-screen layout", "centered search", "large temperature", "cut-corner input", "dark overlay"]
+}
