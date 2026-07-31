@@ -13,7 +13,7 @@ await mkdir(outputDir, { recursive: true });
 
 await Promise.all([
   buildJavaScript({
-    entryPoints: [resolve(sourceDir, "script.js")],
+    entryPoints: [resolve(sourceDir, "script.ts")],
     outfile: resolve(outputDir, "script.js"),
     bundle: true,
     minify: true,

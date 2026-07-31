@@ -41,13 +41,17 @@ const supportedLanguages = Object.keys(localeMap);
 const requestedLanguage = new URLSearchParams(location.search).get("lang");
 const initialLanguage = supportedLanguages.includes(requestedLanguage) ? requestedLanguage : localStorage.getItem("weather-language");
 const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0 };
-const $ = (selector) => document.querySelector(selector);
+const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
+  const element = document.querySelector<T>(selector);
+  if (!element) throw new Error(`Missing required element: ${selector}`);
+  return element;
+};
 const elements = {
-  form: $(".search-form"), input: $("#city-search"), locate: $("#location-button"), languageButton: $("#language-button"),
+  form: $<HTMLFormElement>(".search-form"), input: $<HTMLInputElement>("#city-search"), locate: $<HTMLButtonElement>("#location-button"), languageButton: $<HTMLButtonElement>("#language-button"),
   languageMenu: $("#language-menu"), languageCurrent: $("#language-current"), fullscreen: $("#fullscreen-button"),
-  sound: $("#sound-button"), city: $("#city"), date: $("#date"), temp: $("#temp"), weather: $("#weather"),
+  sound: $<HTMLButtonElement>("#sound-button"), city: $("#city"), date: $("#date"), temp: $("#temp"), weather: $("#weather"),
   hiLow: $("#hi-low"), feels: $("#feels-like"), humidity: $("#humidity"), wind: $("#wind"),
-  icon: $("#weather-icon"), status: $("#status"), updated: $("#updated-time"),
+  icon: $("#weather-icon"), status: $("#status"), updated: $<HTMLTimeElement>("#updated-time"),
   placeMenu: $("#place-menu"), placeOptions: $("#place-options")
 };
 
@@ -57,27 +61,27 @@ function updateSeo() {
   const seo = seoContent[state.lang];
   const pageUrl = `https://weather.bestguo.top/?lang=${state.lang}`;
   document.title = seo.title;
-  document.querySelector('meta[name="description"]').content = seo.description;
-  document.querySelector('meta[name="keywords"]').content = seo.keywords;
-  document.querySelector('link[rel="canonical"]').href = pageUrl;
-  document.querySelector('meta[property="og:title"]').content = seo.title;
-  document.querySelector('meta[property="og:description"]').content = seo.description;
-  document.querySelector('meta[property="og:url"]').content = pageUrl;
-  document.querySelector('meta[property="og:locale"]').content = seo.ogLocale;
-  document.querySelector('meta[name="twitter:title"]').content = seo.title;
-  document.querySelector('meta[name="twitter:description"]').content = seo.description;
+  $("meta[name='description']").setAttribute("content", seo.description);
+  $("meta[name='keywords']").setAttribute("content", seo.keywords);
+  $("link[rel='canonical']").setAttribute("href", pageUrl);
+  $("meta[property='og:title']").setAttribute("content", seo.title);
+  $("meta[property='og:description']").setAttribute("content", seo.description);
+  $("meta[property='og:url']").setAttribute("content", pageUrl);
+  $("meta[property='og:locale']").setAttribute("content", seo.ogLocale);
+  $("meta[name='twitter:title']").setAttribute("content", seo.title);
+  $("meta[name='twitter:description']").setAttribute("content", seo.description);
 }
 
 function applyLanguage() {
   const locale = localeMap[state.lang];
   document.documentElement.lang = locale;
-  document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
-  document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
-  document.querySelectorAll("[data-i18n-title]").forEach((node) => { node.title = t(node.dataset.i18nTitle); });
-  document.querySelectorAll("[data-i18n-aria]").forEach((node) => { node.setAttribute("aria-label", t(node.dataset.i18nAria)); });
+  document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
+  document.querySelectorAll<HTMLInputElement>("[data-i18n-placeholder]").forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
+  document.querySelectorAll<HTMLElement>("[data-i18n-title]").forEach((node) => { node.title = t(node.dataset.i18nTitle); });
+  document.querySelectorAll<HTMLElement>("[data-i18n-aria]").forEach((node) => { node.setAttribute("aria-label", t(node.dataset.i18nAria)); });
   elements.placeMenu.setAttribute("aria-label", t("chooseLocation"));
   elements.languageCurrent.textContent = languageNames[state.lang];
-  elements.languageMenu.querySelectorAll("[data-lang]").forEach((button) => {
+  elements.languageMenu.querySelectorAll<HTMLElement>("[data-lang]").forEach((button) => {
     button.setAttribute("aria-selected", String(button.dataset.lang === state.lang));
   });
   updateSoundLabel();
@@ -401,7 +405,7 @@ function getGpsCoordinates() {
   });
 }
 
-async function useLocation(options = {}) {
+async function useLocation(options: { fallbackToDefault?: boolean } = {}) {
   const fallbackToDefault = options.fallbackToDefault === true;
   const requestId = ++state.locationRequestId;
   elements.locate.disabled = true;
@@ -426,7 +430,7 @@ async function useLocation(options = {}) {
 
 let audio = null;
 function buildNoise(type) {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  const AudioContext = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContext) return null;
   const context = new AudioContext();
   const seconds = 2;
@@ -486,7 +490,7 @@ elements.form.addEventListener("submit", (event) => {
   if (q) getWeather({ q });
 });
 elements.placeMenu.addEventListener("click", (event) => {
-  const option = event.target.closest("[data-place-index]");
+  const option = (event.target as Element).closest<HTMLElement>("[data-place-index]");
   if (!option) return;
   const place = state.pendingPlaces[Number(option.dataset.placeIndex)];
   if (!place) return;
@@ -498,7 +502,7 @@ elements.languageButton.addEventListener("click", () => {
   setLanguageMenu(elements.languageButton.getAttribute("aria-expanded") !== "true");
 });
 elements.languageMenu.addEventListener("click", (event) => {
-  const option = event.target.closest("[data-lang]");
+  const option = (event.target as Element).closest<HTMLElement>("[data-lang]");
   if (!option) return;
   state.lang = option.dataset.lang;
   localStorage.setItem("weather-language", state.lang);
@@ -510,8 +514,9 @@ elements.languageMenu.addEventListener("click", (event) => {
   getWeather(state.lastQuery);
 });
 document.addEventListener("click", (event) => {
-  if (!event.target.closest(".language-control")) setLanguageMenu(false);
-  if (!event.target.closest(".search-form")) closePlaceMenu();
+  const target = event.target as Element;
+  if (!target.closest(".language-control")) setLanguageMenu(false);
+  if (!target.closest(".search-form")) closePlaceMenu();
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {

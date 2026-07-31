@@ -1,14 +1,20 @@
 {
   "name": "my-weather",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "node build.mjs",
+    "dev": "npm run build && http-server dist -p 3000 -c-1",
+    "typecheck": "tsc --noEmit",
+    "build": "tsx build.ts",
     "preview": "http-server dist -p 4173 -c-1"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "esbuild": "^0.25.0",
     "html-minifier-terser": "^7.2.0",
     "http-server": "^14.1.1",
-    "lightningcss": "^1.29.0"
+    "lightningcss": "^1.29.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
   }
 }
