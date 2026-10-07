@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "npm run build && http-server dist -p 3000 -c-1",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/location.test.mjs",
     "build": "tsx build.ts",
     "preview": "http-server dist -p 4173 -c-1"
   },

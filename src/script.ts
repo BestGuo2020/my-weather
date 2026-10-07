@@ -1,19 +1,11 @@
 "use strict";
 
+import { BrowserLocationError, getGpsCoordinates, getIpCoordinates, locationFeedback, type Coordinates, type LocationDiagnostics } from "./location";
+
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
 const OPEN_METEO_GEO_URL = "https://geocoding-api.open-meteo.com/v1/search";
-const IP_GEO_PROVIDERS = [
-  {
-    url: "https://ipwho.is/",
-    parse: (data) => ({ success: data.success !== false, latitude: data.latitude, longitude: data.longitude })
-  },
-  {
-    url: "https://ipapi.co/json/",
-    parse: (data) => ({ success: !data.error, latitude: data.latitude, longitude: data.longitude })
-  }
-];
 const REFRESH_INTERVAL = 12 * 60 * 1000;
 const languageNames = { zh_cn: "中文", en: "English", es: "Español", fr: "Français", ja: "日本語" };
 const placeNameFallbacks = {
@@ -40,7 +32,7 @@ const seoContent = {
 const supportedLanguages = Object.keys(localeMap);
 const requestedLanguage = new URLSearchParams(location.search).get("lang");
 const initialLanguage = supportedLanguages.includes(requestedLanguage) ? requestedLanguage : localStorage.getItem("weather-language");
-const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0 };
+const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0, locationDiagnostics: null as LocationDiagnostics | null };
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing required element: ${selector}`);
@@ -52,7 +44,9 @@ const elements = {
   sound: $<HTMLButtonElement>("#sound-button"), city: $("#city"), date: $("#date"), temp: $("#temp"), weather: $("#weather"),
   hiLow: $("#hi-low"), feels: $("#feels-like"), humidity: $("#humidity"), wind: $("#wind"),
   icon: $("#weather-icon"), status: $("#status"), updated: $<HTMLTimeElement>("#updated-time"),
-  placeMenu: $("#place-menu"), placeOptions: $("#place-options")
+  placeMenu: $("#place-menu"), placeOptions: $("#place-options"),
+  locationFeedback: $("#location-feedback"), locationMessage: $("#location-message"),
+  locationDetails: $<HTMLDetailsElement>("#location-details"), locationSummary: $("#location-summary"), locationDebug: $("#location-debug")
 };
 
 function t(key) { return translations[state.lang][key] || translations.en[key] || key; }
@@ -87,6 +81,7 @@ function applyLanguage() {
   updateSoundLabel();
   updateFullscreenLabel();
   updateSeo();
+  renderLocationFeedback();
   if (state.data) renderWeather(state.data);
   else updateDate();
 }
@@ -369,58 +364,52 @@ async function getWeather(params, selectedPlace = null) {
   }
 }
 
-async function getIpCoordinates() {
-  for (const provider of IP_GEO_PROVIDERS) {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 5000);
-    try {
-      const response = await fetch(provider.url, { signal: controller.signal });
-      if (!response.ok) continue;
-      const location = provider.parse(await response.json());
-      const latitude = Number(location.latitude);
-      const longitude = Number(location.longitude);
-      if (location.success && Number.isFinite(latitude) && Number.isFinite(longitude)) {
-        return { lat: latitude.toFixed(5), lon: longitude.toFixed(5) };
-      }
-    } catch {
-      // Try the next IP provider.
-    } finally {
-      window.clearTimeout(timeout);
-    }
-  }
-  throw new Error("ipLocationFailed");
-}
-
-function getGpsCoordinates() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("gpsUnavailable"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => resolve({ lat: coords.latitude.toFixed(5), lon: coords.longitude.toFixed(5) }),
-      () => reject(new Error("gpsUnavailable")),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-    );
-  });
+function renderLocationFeedback() {
+  const diagnostics = state.locationDiagnostics;
+  elements.locationFeedback.hidden = !diagnostics;
+  if (!diagnostics) return;
+  const feedback = locationFeedback(diagnostics, state.lang);
+  elements.locationFeedback.dataset.warning = String(feedback.warning);
+  elements.locationMessage.textContent = feedback.message;
+  elements.locationSummary.textContent = feedback.summary;
+  elements.locationDebug.textContent = feedback.details;
 }
 
 async function useLocation(options: { fallbackToDefault?: boolean } = {}) {
   const fallbackToDefault = options.fallbackToDefault === true;
   const requestId = ++state.locationRequestId;
+  const diagnostics: LocationDiagnostics = { phase: "browser", startedAt: Date.now() };
+  state.locationDiagnostics = diagnostics;
+  elements.locationDetails.open = false;
+  renderLocationFeedback();
   elements.locate.disabled = true;
   elements.status.textContent = t("locating");
   try {
-    let coordinates;
+    let coordinates: Coordinates;
     try {
       coordinates = await getGpsCoordinates();
-    } catch {
+      diagnostics.source = "browser";
+    } catch (error) {
+      if (requestId !== state.locationRequestId) return;
+      diagnostics.browserError = error instanceof BrowserLocationError
+        ? error : new BrowserLocationError(null, error instanceof Error ? error.message : String(error));
+      diagnostics.browserDuration = Date.now() - diagnostics.startedAt;
+      diagnostics.phase = "ip";
+      elements.locationDetails.open = true;
+      renderLocationFeedback();
       coordinates = await getIpCoordinates();
+      diagnostics.source = "ip";
     }
     if (requestId !== state.locationRequestId) return;
-    await getWeather(coordinates);
+    diagnostics.browserDuration ??= Date.now() - diagnostics.startedAt;
+    diagnostics.coordinates = coordinates;
+    diagnostics.phase = "ready";
+    renderLocationFeedback();
+    await getWeather({ lat: coordinates.lat, lon: coordinates.lon });
   } catch {
     if (requestId !== state.locationRequestId) return;
+    diagnostics.phase = fallbackToDefault ? "default" : "failed";
+    renderLocationFeedback();
     if (fallbackToDefault) await getWeather(state.lastQuery);
     else elements.status.textContent = t("locationDenied");
   } finally {
@@ -487,7 +476,12 @@ elements.form.addEventListener("submit", (event) => {
   event.preventDefault();
   setLanguageMenu(false);
   const q = elements.input.value.trim();
-  if (q) getWeather({ q });
+  if (q) {
+    ++state.locationRequestId;
+    state.locationDiagnostics = null;
+    renderLocationFeedback();
+    getWeather({ q });
+  }
 });
 elements.placeMenu.addEventListener("click", (event) => {
   const option = (event.target as Element).closest<HTMLElement>("[data-place-index]");

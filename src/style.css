@@ -192,6 +192,18 @@ main {
 .details b { font-weight: 600; }
 .details i { font-style: normal; }
 .status { min-height: 1.5em; margin-top: var(--space-md); color: var(--color-paper); font-size: var(--text-sm); }
+.location-feedback {
+  max-width: 36rem; margin: var(--space-sm) auto; padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-glass); border-radius: .5rem;
+  background: var(--color-glass); color: var(--color-paper); text-align: left;
+  font-size: var(--text-sm); line-height: 1.6; overflow-wrap: anywhere;
+}
+.location-feedback[hidden] { display: none; }
+.location-feedback[data-warning="true"] { border-color: var(--color-accent); }
+.location-feedback p { margin: 0; }
+.location-feedback details { margin-top: var(--space-2xs); }
+.location-feedback summary { cursor: pointer; }
+.location-feedback pre { margin: var(--space-xs) 0 0; white-space: pre-wrap; font: inherit; font-size: var(--text-xs); }
 .updated { margin-top: var(--space-2xs); color: var(--color-paper); font-size: var(--text-xs); opacity: .78; }
 footer { padding: var(--space-sm) var(--space-md) var(--space-md); text-align: center; color: var(--color-paper); font-size: var(--text-xs); opacity: .75; }
 footer a {
