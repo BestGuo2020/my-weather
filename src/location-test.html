@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>手机定位对照 · My Weather</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px 16px; background: #14243a; color: #f4f6fa; font: 16px/1.65 system-ui, sans-serif; }
+    main { max-width: 680px; margin: auto; }
+    h1 { font-size: 26px; }
+    a { color: #b6dcff; }
+    button { display: block; width: 100%; margin: 12px 0; padding: 14px; border: 1px solid #8dc6f7; border-radius: 10px; background: #264766; color: inherit; font: inherit; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: wait; }
+    pre { padding: 16px; border: 1px solid #74859b; border-radius: 10px; background: #203248; font: 14px/1.7 system-ui, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>手机定位对照</h1>
+    <p>依次点击两个按钮，允许精确定位，比较浏览器返回的结果。这页仅显示浏览器定位结果，不查询 IP，也不请求天气服务。</p>
+    <button id="reference-test" type="button">1. 按 GeoQux 的参数定位</button>
+    <button id="precise-test" type="button">2. 明确请求精确位置模式</button>
+    <p id="test-status" role="status" aria-live="polite">等待点击。诊断版本：2026-10-07.3</p>
+    <pre id="test-result">点击按钮后显示定位详情。</pre>
+    <p><a href="./?lang=zh_cn&amp;v=location-20261007-3">返回天气页</a></p>
+  </main>
+  <script>
+    "use strict";
+    const buttons = [...document.querySelectorAll("button")];
+    const status = document.querySelector("#test-status");
+    const result = document.querySelector("#test-result");
+    function runTest(explicitMode, event) {
+      const startedAt = Date.now();
+      let modeRead = false;
+      const options = { enableHighAccuracy: true, timeout: explicitMode ? 30000 : 10000, maximumAge: 0 };
+      if (explicitMode) Object.defineProperty(options, "accuracyMode", {
+        enumerable: true, get() { modeRead = true; return "precise"; }
+      });
+      const context = {
+        version: "2026-10-07.3", test: explicitMode ? "明确精确模式" : "GeoQux 同参数",
+        origin: location.origin, userAgent: navigator.userAgent,
+        userActivation: navigator.userActivation?.isActive ?? null,
+        trustedClick: event.isTrusted, secureContext: window.isSecureContext,
+        options: { enableHighAccuracy: true, timeout: options.timeout, maximumAge: 0, ...(explicitMode ? { accuracyMode: "precise" } : {}) }
+      };
+      const finish = (outcome) => {
+        status.textContent = outcome.success ? "浏览器定位成功。" : "浏览器定位失败。没有使用 IP 回退。";
+        result.textContent = JSON.stringify({ ...context, elapsedSeconds: (Date.now() - startedAt) / 1000,
+          ...(explicitMode ? { browserReadAccuracyMode: modeRead } : {}), ...outcome }, null, 2);
+        buttons.forEach(button => { button.disabled = false; });
+      };
+      buttons.forEach(button => { button.disabled = true; });
+      status.textContent = "正在请求浏览器位置…";
+      try {
+        if (!navigator.geolocation) throw new Error("Geolocation unavailable");
+        // Call directly from the click handler, matching the working reference page.
+        navigator.geolocation.getCurrentPosition(
+          ({ coords, timestamp }) => finish({ success: true, longitude: coords.longitude, latitude: coords.latitude,
+            accuracyMeters: coords.accuracy, positionTimestamp: new Date(timestamp).toISOString() }),
+          error => finish({ success: false, errorCode: error.code, errorMessage: error.message }),
+          options
+        );
+      } catch (error) { finish({ success: false, errorMessage: String(error.message || error) }); }
+    }
+    document.querySelector("#reference-test").addEventListener("click", event => runTest(false, event));
+    document.querySelector("#precise-test").addEventListener("click", event => runTest(true, event));
+  </script>
+</body>
+</html>

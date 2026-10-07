@@ -52,6 +52,7 @@ await Promise.all([
   })(),
 
   copyFile(resolve(sourceDir, "robots.txt"), resolve(outputDir, "robots.txt")),
+  copyFile(resolve(sourceDir, "location-test.html"), resolve(outputDir, "location-test.html")),
   copyFile(resolve(sourceDir, "sitemap.xml"), resolve(outputDir, "sitemap.xml")),
   copyFile(resolve(sourceDir, "favicon.png"), resolve(outputDir, "favicon.png")),
   copyFile(resolve(sourceDir, "github-svgrepo-com.svg"), resolve(outputDir, "github-svgrepo-com.svg"))

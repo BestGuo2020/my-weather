@@ -375,33 +375,42 @@ function renderLocationFeedback() {
   elements.locationDebug.textContent = feedback.details;
 }
 
-async function useLocation(options: { fallbackToDefault?: boolean } = {}) {
+async function useLocation(options: { fallbackToDefault?: boolean; ipOnly?: boolean; automatic?: boolean } = {}) {
   const fallbackToDefault = options.fallbackToDefault === true;
+  const ipOnly = options.ipOnly === true;
   const requestId = ++state.locationRequestId;
-  const diagnostics: LocationDiagnostics = { phase: "browser", startedAt: Date.now() };
+  const diagnostics: LocationDiagnostics = {
+    phase: ipOnly ? "ip" : "browser", startedAt: Date.now(), trigger: ipOnly ? "page-ip" : options.automatic ? "page-browser" : "button",
+    ...(!ipOnly ? { userActivation: navigator.userActivation?.isActive, userAgent: navigator.userAgent, origin: location.origin } : {})
+  };
   state.locationDiagnostics = diagnostics;
   elements.locationDetails.open = false;
   renderLocationFeedback();
-  elements.locate.disabled = true;
+  elements.locate.disabled = !ipOnly;
   elements.status.textContent = t("locating");
   try {
     let coordinates: Coordinates;
-    try {
-      coordinates = await getGpsCoordinates();
-      diagnostics.source = "browser";
-    } catch (error) {
-      if (requestId !== state.locationRequestId) return;
-      diagnostics.browserError = error instanceof BrowserLocationError
-        ? error : new BrowserLocationError(null, error instanceof Error ? error.message : String(error));
-      diagnostics.browserDuration = Date.now() - diagnostics.startedAt;
-      diagnostics.phase = "ip";
-      elements.locationDetails.open = true;
-      renderLocationFeedback();
+    if (ipOnly) {
       coordinates = await getIpCoordinates();
       diagnostics.source = "ip";
+    } else {
+      try {
+        coordinates = await getGpsCoordinates();
+        diagnostics.source = "browser";
+      } catch (error) {
+        if (requestId !== state.locationRequestId) return;
+        diagnostics.browserError = error instanceof BrowserLocationError
+          ? error : new BrowserLocationError(null, error instanceof Error ? error.message : String(error));
+        diagnostics.browserDuration = Date.now() - diagnostics.startedAt;
+        diagnostics.phase = "ip";
+        elements.locationDetails.open = true;
+        renderLocationFeedback();
+        coordinates = await getIpCoordinates();
+        diagnostics.source = "ip";
+      }
     }
     if (requestId !== state.locationRequestId) return;
-    diagnostics.browserDuration ??= Date.now() - diagnostics.startedAt;
+    if (!ipOnly) diagnostics.browserDuration ??= Date.now() - diagnostics.startedAt;
     diagnostics.coordinates = coordinates;
     diagnostics.phase = "ready";
     renderLocationFeedback();
@@ -528,4 +537,6 @@ elements.fullscreen.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenLabel);
 
 applyLanguage();
-useLocation({ fallbackToDefault: true });
+// On mobile, request device location from the user's click, like the working reference.
+const mobileBrowser = /Android|iPhone|iPad/i.test(navigator.userAgent);
+useLocation({ fallbackToDefault: true, ipOnly: mobileBrowser, automatic: true });

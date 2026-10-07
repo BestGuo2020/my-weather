@@ -12,10 +12,11 @@ const bundle = buildSync({
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020'
 }).outputFiles[0].text;
 
-function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false } = {}) {
+function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false, autoLocate = true, readsAccuracyMode = true, delayedInitialIp = false, mobile = true } = {}) {
   const nodes = new Map();
   const requests = [];
   const options = [];
+  let releaseInitialIp;
   const node = selector => {
     if (!nodes.has(selector)) nodes.set(selector, {
       hidden: false, open: false, disabled: false, textContent: '', value: '', dataset: {}, listeners: {},
@@ -27,21 +28,25 @@ function environment({ errorCode, errorMessage = 'Network location service unava
   const geolocation = {
     getCurrentPosition(success, failure, settings) {
       options.push(settings);
-      if (approximateUnavailable && !settings.enableHighAccuracy) failure({ code: 2, message: 'Cannot generate approximate location.' });
+      const mode = readsAccuracyMode ? settings.accuracyMode : undefined;
+      if (approximateUnavailable && mode !== 'precise') failure({ code: 2, message: 'Cannot generate approximate location.' });
       else if (errorCode) failure({ code: errorCode, message: errorMessage });
-      else success({ coords: { latitude: 27.13106924717127, longitude: 113.95601657570867, accuracy }, timestamp: 1791345600000 });
+      else success({ coords: { latitude: 27.13, longitude: 113.96, accuracy }, timestamp: 1791345600000 });
     }
   };
   const context = {
     console, URL, URLSearchParams, Intl, Date, AbortController,
-    navigator: unsupported ? {} : { geolocation },
+    navigator: { ...(unsupported ? {} : { geolocation }), userActivation: { isActive: true }, userAgent: mobile ? 'Mobile Edge test browser; Android 14' : 'Desktop Edge test browser' },
     window: { isSecureContext: !insecure, setTimeout: (...args) => setTimeout(...args).unref(), clearTimeout },
     localStorage: { getItem() { return null; }, setItem() {} },
-    location: { search: '', href: 'https://weather.bestguo.top/' }, history: { replaceState() {} },
+    location: { search: '', href: 'https://weather.bestguo.top/', origin: 'https://weather.bestguo.top' }, history: { replaceState() {} },
     document: { querySelector: node, querySelectorAll: () => [], addEventListener() {}, documentElement: node('html'), body: node('body') },
     fetch: async url => {
       requests.push(url);
       if (url.startsWith('https://ipwho.is/') || url.startsWith('https://ipapi.co/')) {
+        if (delayedInitialIp && !releaseInitialIp) return new Promise(resolve => {
+          releaseInitialIp = () => resolve({ ok: true, json: async () => ({ success: true, latitude: 30.5928, longitude: 114.3055 }) });
+        });
         if (ipFails) throw new Error('IP provider unavailable');
         return { ok: true, json: async () => ({ success: true, latitude: 30.5928, longitude: 114.3055 }) };
       }
@@ -57,7 +62,11 @@ function environment({ errorCode, errorMessage = 'Network location service unava
   };
   vm.createContext(context);
   vm.runInContext(bundle, context);
-  return { context, nodes, requests, options, node, app: context.weatherTest };
+  if (autoLocate) {
+    requests.length = 0;
+    context.weatherTest.useLocation({ fallbackToDefault: true });
+  }
+  return { context, nodes, requests, options, node, app: context.weatherTest, releaseInitialIp: () => releaseInitialIp() };
 }
 
 async function settle() {
@@ -69,16 +78,111 @@ test('browser success keeps the correct coordinates and accuracy, without IP fal
   await settle();
   assert.equal(env.node('#city').textContent, '莲花县, CN');
   assert.match(env.node('#location-message').textContent, /已使用浏览器定位/);
-  assert.match(env.node('#location-debug').textContent, /113\.95602, 27\.13107/);
+  assert.match(env.node('#location-debug').textContent, /113\.96000, 27\.13000/);
   assert.match(env.node('#location-debug').textContent, /±18 米/);
   assert.ok(!env.requests.some(url => url.includes('ipwho.is')));
   assert.equal(env.options[0].enableHighAccuracy, true);
   assert.equal(env.options[0].maximumAge, 0);
   assert.equal(env.options[0].timeout, 30000);
+  assert.equal(env.options[0].accuracyMode, 'precise');
   for (const url of env.requests) {
     assert.ok(!new URL(url).searchParams.has('accuracy'));
     assert.ok(!new URL(url).searchParams.has('timestamp'));
   }
+});
+
+test('opening the page uses a labelled IP estimate without requesting device permission', async () => {
+  const env = environment({ autoLocate: false });
+  await settle();
+  assert.equal(env.options.length, 0);
+  assert.match(env.node('#location-message').textContent, /IP 估算/);
+  assert.match(env.node('#location-message').textContent, /点击/);
+  assert.doesNotMatch(env.node('#location-message').textContent, /浏览器定位失败/);
+  assert.doesNotMatch(env.node('#location-debug').textContent, /enableHighAccuracy/);
+});
+
+test('desktop startup still obtains device location automatically', async () => {
+  const env = environment({ mobile: false, autoLocate: false });
+  await settle();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.equal(env.options.length, 1);
+  assert.match(env.node('#location-debug').textContent, /打开页面时的设备定位/);
+  assert.ok(!env.requests.some(url => url.includes('ipwho.is')));
+});
+
+test('the location button requests device location and records the browser context', async () => {
+  const env = environment({ autoLocate: false });
+  await settle();
+  env.requests.length = 0;
+  await env.node('#location-button').listeners.click();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-debug').textContent, /用户点击激活: true/);
+  assert.match(env.node('#location-debug').textContent, /精确模式选项: true/);
+  assert.match(env.node('#location-debug').textContent, /Mobile Edge test browser/);
+  assert.ok(!env.requests.some(url => url.includes('ipwho.is')));
+});
+
+test('older browsers can ignore accuracyMode and still return a device position', async () => {
+  const env = environment({ readsAccuracyMode: false });
+  await settle();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-debug').textContent, /精确模式选项: false/);
+});
+
+test('a slow initial IP response cannot overwrite a successful device-location click', async () => {
+  const env = environment({ autoLocate: false, delayedInitialIp: true });
+  assert.equal(env.node('#location-button').disabled, false);
+  await env.node('#location-button').listeners.click();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  env.releaseInitialIp();
+  await settle();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-message').textContent, /已使用浏览器定位/);
+});
+
+function comparisonPage() {
+  const html = readFileSync(new URL('../src/location-test.html', import.meta.url), 'utf8');
+  const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const nodes = new Map(['#reference-test', '#precise-test', '#test-status', '#test-result'].map(key => [key, {
+    textContent: '', disabled: false, listeners: {}, addEventListener(name, listener) { this.listeners[name] = listener; }
+  }]));
+  const calls = [];
+  const context = {
+    Date, JSON, Object,
+    document: { querySelector: key => nodes.get(key), querySelectorAll: () => [nodes.get('#reference-test'), nodes.get('#precise-test')] },
+    location: { origin: 'https://weather.bestguo.top' }, window: { isSecureContext: true },
+    navigator: { userAgent: 'Mobile Edge test browser', userActivation: { isActive: true }, geolocation: {
+      getCurrentPosition(success, failure, options) {
+        calls.push({ enableHighAccuracy: options.enableHighAccuracy, maximumAge: options.maximumAge,
+          timeout: options.timeout, accuracyMode: options.accuracyMode });
+        failure({ code: 2, message: 'Cannot generate approximate location.' });
+      }
+    } },
+    fetch: () => { throw new Error('The comparison page must not request IP or weather data'); }
+  };
+  vm.createContext(context);
+  vm.runInContext(script, context);
+  return { nodes, calls };
+}
+
+test('the direct comparison waits for a click and matches the GeoQux options exactly', () => {
+  const page = comparisonPage();
+  assert.equal(page.calls.length, 0);
+  page.nodes.get('#reference-test').listeners.click({ isTrusted: true });
+  assert.deepEqual(page.calls[0], { enableHighAccuracy: true, maximumAge: 0, timeout: 10000, accuracyMode: undefined });
+  const result = JSON.parse(page.nodes.get('#test-result').textContent);
+  assert.equal(result.errorMessage, 'Cannot generate approximate location.');
+  assert.equal(result.trustedClick, true);
+});
+
+test('the precise comparison records accuracyMode consumption and the original browser failure', () => {
+  const page = comparisonPage();
+  page.nodes.get('#precise-test').listeners.click({ isTrusted: true });
+  assert.equal(page.calls[0].accuracyMode, 'precise');
+  const result = JSON.parse(page.nodes.get('#test-result').textContent);
+  assert.equal(result.browserReadAccuracyMode, true);
+  assert.equal(result.errorCode, 2);
+  assert.match(page.nodes.get('#test-status').textContent, /没有使用 IP 回退/);
 });
 
 test('a browser that rejects approximate requests receives a precise request and does not fall back to IP', async () => {
