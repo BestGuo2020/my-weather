@@ -12,7 +12,7 @@ const bundle = buildSync({
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020'
 }).outputFiles[0].text;
 
-function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, accuracy = 18, insecure = false, unsupported = false } = {}) {
+function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false } = {}) {
   const nodes = new Map();
   const requests = [];
   const options = [];
@@ -27,7 +27,8 @@ function environment({ errorCode, errorMessage = 'Network location service unava
   const geolocation = {
     getCurrentPosition(success, failure, settings) {
       options.push(settings);
-      if (errorCode) failure({ code: errorCode, message: errorMessage });
+      if (approximateUnavailable && !settings.enableHighAccuracy) failure({ code: 2, message: 'Cannot generate approximate location.' });
+      else if (errorCode) failure({ code: errorCode, message: errorMessage });
       else success({ coords: { latitude: 27.13106924717127, longitude: 113.95601657570867, accuracy }, timestamp: 1791345600000 });
     }
   };
@@ -71,11 +72,30 @@ test('browser success keeps the correct coordinates and accuracy, without IP fal
   assert.match(env.node('#location-debug').textContent, /113\.95602, 27\.13107/);
   assert.match(env.node('#location-debug').textContent, /±18 米/);
   assert.ok(!env.requests.some(url => url.includes('ipwho.is')));
-  assert.equal(env.options[0].enableHighAccuracy, false);
+  assert.equal(env.options[0].enableHighAccuracy, true);
+  assert.equal(env.options[0].maximumAge, 0);
+  assert.equal(env.options[0].timeout, 30000);
   for (const url of env.requests) {
     assert.ok(!new URL(url).searchParams.has('accuracy'));
     assert.ok(!new URL(url).searchParams.has('timestamp'));
   }
+});
+
+test('a browser that rejects approximate requests receives a precise request and does not fall back to IP', async () => {
+  const env = environment({ approximateUnavailable: true });
+  await settle();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-message').textContent, /已使用浏览器定位/);
+  assert.match(env.node('#location-debug').textContent, /enableHighAccuracy=true/);
+  assert.ok(!env.requests.some(url => url.includes('ipwho.is') || url.includes('ipapi.co')));
+});
+
+test('the reported Android approximate-location error is retained if the browser still returns it', async () => {
+  const env = environment({ errorCode: 2, errorMessage: 'Cannot generate approximate location.' });
+  await settle();
+  assert.match(env.node('#location-debug').textContent, /错误码: 2/);
+  assert.match(env.node('#location-debug').textContent, /Cannot generate approximate location\./);
+  assert.match(env.node('#location-message').textContent, /IP 估算/);
 });
 
 for (const [code, description] of [[1, '定位权限被拒绝'], [2, '无法获取位置'], [3, '请求超时']]) {

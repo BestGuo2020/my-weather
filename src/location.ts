@@ -1,6 +1,6 @@
-export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-07.1";
-// Preserve the production settings while diagnosing the mobile failure.
-export const GPS_OPTIONS: PositionOptions = { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 };
+export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-07.2";
+// Request a fresh, precise position instead of Android's approximate-location path.
+export const GPS_OPTIONS: PositionOptions = { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 };
 
 export type Coordinates = { lat: string; lon: string; accuracy?: number; timestamp?: number; provider?: string };
 
