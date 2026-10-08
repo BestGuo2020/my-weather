@@ -43,23 +43,14 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="./style.css?v=location-20261007-3">
+  <link rel="stylesheet" href="./style.css?v=sky-20261008-5">
 </head>
 <body data-weather="clear" data-period="day">
   <div class="weather-scene" aria-hidden="true">
     <span class="scene-orb"></span>
-    <span class="scene-cloud scene-cloud-a"></span>
-    <span class="scene-cloud scene-cloud-b"></span>
-    <span class="scene-rain">
-      <i class="rain-layer rain-far"></i>
-      <i class="rain-layer rain-mid"></i>
-      <i class="rain-layer rain-near"></i>
-    </span>
-    <span class="scene-snow">
-      <i class="snow-layer snow-far"></i>
-      <i class="snow-layer snow-mid"></i>
-      <i class="snow-layer snow-near"></i>
-    </span>
+    <div id="sky-clouds" class="sky-clouds"></div>
+    <span class="sky-haze"></span>
+    <div id="city-scene" class="city-scene"></div>
   </div>
 
   <div class="app-wrap">
@@ -157,8 +148,10 @@
       <a href="https://www.bestguo.top" target="_blank" rel="noopener noreferrer">BestGuo2020</a>
       <span> · Geocoding by</span>
       <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+      <span> · </span><a href="https://zenodo.org/records/8419340" target="_blank" rel="noopener noreferrer"
+        title="Global LCZ map · Demuzere et al. · 2018 · CC BY 4.0">LCZ 2018 · WUDAPT</a>
     </footer>
   </div>
-  <script src="./script.js?v=location-20261007-3"></script>
+  <script type="module" src="./script.js?v=sky-20261008-5"></script>
 </body>
 </html>

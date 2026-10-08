@@ -1,0 +1,288 @@
+/* A quiet, layered city at the bottom of the weather scene. */
+.city-scene {
+  --city-far: #617d8c;
+  --city-wall: #506875;
+  --city-side: #405966;
+  --city-roof: #354e5d;
+  --city-window: #91b4c1;
+  --city-window-lit: #d4b77a;
+  --city-ground: #3b5b56;
+  --city-sidewalk: #6c817f;
+  --city-road: #334954;
+  --city-leaf: #365f56;
+  --city-leaf-light: #487967;
+  position: absolute;
+  inset: auto 0 0;
+  height: clamp(15rem, 39vh, 27rem);
+  opacity: .88;
+  transition: opacity var(--dur-weather) var(--ease-in-out);
+}
+.city-panorama {
+  position: absolute; bottom: 0; left: 50%;
+  width: max(100%, 60rem); height: 100%;
+  transform: translateX(-50%);
+  overflow: visible;
+}
+.city-scene::after { content: ""; position: absolute; top: 100%; inset-inline: 0; height: 3rem; background: var(--city-ground); }
+.city-haze { fill: #9caeac; opacity: .2; }
+.city-distant { opacity: .38; }
+.building-far .building-wall, .building-far .building-roof, .building-far .building-side { fill: var(--city-far); }
+.building-wall { fill: var(--city-wall); }
+.building-side { fill: var(--city-side); }
+.building-roof { fill: var(--city-roof); }
+.building-window { fill: var(--city-window); opacity: .28; }
+.window-lit { fill: var(--city-window-lit); opacity: .38; }
+.building-door { fill: var(--city-roof); }
+.building-antenna { stroke: var(--city-roof); stroke-width: 2; }
+.shop-awning { fill: #c19273; opacity: .65; }
+.city-ground { fill: var(--city-ground); }
+.city-sidewalk { fill: var(--city-sidewalk); }
+.sidewalk-edge { stroke: #a5b8ae; stroke-width: 3; opacity: .45; }
+.city-road { fill: var(--city-road); }
+.road-marking { stroke: #d5ccb2; stroke-width: 2; stroke-dasharray: 28 30; opacity: .45; }
+.road-edge { stroke: #b7c4b9; stroke-width: 1; opacity: .2; }
+.road-crossing { stroke: #d6d9cc; stroke-width: 6; opacity: .34; }
+.road-reflection { stroke: #bacfd6; stroke-width: 2; stroke-linecap: round; opacity: 0; }
+.city-puddles { fill: #91b3c7; opacity: 0; }
+.city-rain, .city-snow { display: none; }
+.city-rain { stroke: #bfdae9; stroke-linecap: round; }
+.city-snow { fill: #f0f5f6; }
+.city-rain-drop, .city-snowflake {
+  opacity: 0;
+  animation: city-rain-fall var(--particle-duration) linear infinite;
+  animation-delay: var(--particle-delay);
+  animation-play-state: paused;
+}
+.city-snowflake { animation-name: city-snow-fall; }
+.particle-moderate, .particle-heavy { display: none; }
+body[data-intensity="moderate"] .particle-moderate,
+body[data-intensity="heavy"] .particle-moderate,
+body[data-intensity="heavy"] .particle-heavy { display: inline; }
+body[data-weather="rain"] .city-rain, body[data-weather="thunderstorm"] .city-rain,
+body[data-weather="snow"] .city-snow { display: inline; }
+body[data-weather="rain"] .city-rain-drop, body[data-weather="thunderstorm"] .city-rain-drop,
+body[data-weather="snow"] .city-snowflake { animation-play-state: running; }
+.city-ripple {
+  fill: none; stroke: #b7d3df; stroke-width: .7; opacity: 0;
+  transform-box: fill-box; transform-origin: center;
+  animation: city-ripple var(--ripple-duration) ease-out infinite;
+  animation-delay: var(--ripple-delay); animation-play-state: paused;
+}
+body[data-weather="rain"] .city-ripple, body[data-weather="thunderstorm"] .city-ripple { animation-play-state: running; }
+.street-shadow { fill: #142938; opacity: .25; }
+.tree-trunk { fill: #334a47; }
+.tree-crown { transform-box: fill-box; transform-origin: 50% 100%; animation: city-tree-sway 7s ease-in-out infinite alternate; }
+.tree-leaf { fill: var(--city-leaf); }
+.tree-leaf-light { fill: var(--city-leaf-light); }
+.city-trees > g:nth-child(even) .tree-crown { animation-delay: -3s; }
+.street-pole { stroke: #324b58; stroke-width: 3; stroke-linecap: round; }
+.street-sign { fill: #426d69; stroke: #8ba6a2; stroke-width: 1; }
+.sign-arrow { stroke: #dbe6d5; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lamp-housing, .traffic-housing { fill: #2c414c; }
+.lamp-light { fill: #d4c6a1; opacity: .45; }
+.lamp-glow { fill: #ffdb90; opacity: 0; filter: blur(10px); }
+.traffic-red { fill: #a36d62; opacity: .45; }
+.traffic-amber { fill: #af9361; opacity: .4; }
+.traffic-green { fill: #a5c78c; }
+.city-car, .city-person {
+  animation: city-travel var(--travel-duration) linear infinite;
+  animation-delay: var(--travel-delay);
+  will-change: transform;
+}
+.car-reverse, .person-reverse { animation-direction: reverse; }
+.car-body { fill: #c29970; }
+.car-1 .car-body { fill: #9fb8b6; }
+.car-2 .car-body { fill: #aa7868; }
+.car-glass { fill: #314c5d; }
+.car-wheel { fill: #20333e; }
+.wheel-hub { fill: #77868a; }
+.car-headlight { fill: #f8deb2; }
+.car-taillight { fill: #e59076; }
+.headlight-beam { fill: #ffe1ab; opacity: 0; }
+.person-skin { fill: #d0ad8e; }
+.person-coat { fill: #c9b893; }
+.city-person:nth-child(even) .person-coat { fill: #92b2b2; }
+.person-limb { stroke: #283f4b; stroke-width: 2.5; stroke-linecap: round; }
+.person-shoe { stroke: #20333e; stroke-width: 2.5; stroke-linecap: round; }
+.person-body {
+  --limb-delay: var(--walk-delay);
+  transform: translateY(-1.4px);
+  animation: city-walk-bob var(--walk-duration) linear infinite;
+  animation-delay: var(--walk-delay);
+}
+.person-limb-back { --limb-delay: var(--walk-opposite-delay); opacity: .65; }
+/* Static joint anchors stay on parent groups; rotations use each joint's local origin. */
+.person-thigh, .person-shin, .person-foot, .person-arm-swing {
+  transform-box: view-box; transform-origin: 0 0;
+  animation: city-walk-thigh var(--walk-duration) linear infinite;
+  animation-delay: var(--limb-delay);
+}
+.person-shin { animation-name: city-walk-shin; }
+.person-foot { animation-name: city-walk-foot; }
+.person-arm-swing { animation-name: city-walk-arm; }
+.person-walk-shadow {
+  transform-box: fill-box; transform-origin: center;
+  animation: city-walk-shadow var(--walk-duration) linear infinite;
+  animation-delay: var(--walk-delay);
+}
+.person-arm-holding { display: none; }
+.person-umbrella { opacity: 0; }
+.umbrella-canopy { fill: #cda578; }
+.umbrella-handle { stroke: #c4c4b4; stroke-width: 1.5; }
+.tree-snow, .street-snow { fill: #e6eef0; opacity: 0; }
+
+body[data-weather="clouds"] .city-scene,
+body[data-weather="rain"] .city-scene,
+body[data-weather="thunderstorm"] .city-scene {
+  --city-far: #70818b; --city-wall: #49606f; --city-side: #3b5261;
+  --city-window: #8cabb9; --city-leaf: #355953; --city-leaf-light: #426c61;
+}
+body[data-weather="rain"] .city-scene, body[data-weather="thunderstorm"] .city-scene {
+  --city-road: #293d4d; --city-sidewalk: #5e737c;
+}
+body[data-weather="rain"] .road-reflection, body[data-weather="thunderstorm"] .road-reflection { opacity: .35; }
+body[data-weather="rain"] .city-puddles, body[data-weather="thunderstorm"] .city-puddles { opacity: .18; }
+body[data-weather="rain"][data-intensity="light"] .road-reflection { opacity: .18; }
+body[data-weather="rain"][data-intensity="heavy"] .road-reflection { opacity: .5; }
+body[data-weather="rain"] .person-umbrella, body[data-weather="thunderstorm"] .person-umbrella { opacity: 1; }
+body[data-weather="rain"] .person-arm-front .person-arm-swing,
+body[data-weather="thunderstorm"] .person-arm-front .person-arm-swing { animation: none; transform: none; }
+body[data-weather="rain"] .person-arm-front .person-arm-walking,
+body[data-weather="thunderstorm"] .person-arm-front .person-arm-walking { display: none; }
+body[data-weather="rain"] .person-arm-holding,
+body[data-weather="thunderstorm"] .person-arm-holding { display: inline; }
+body[data-weather="snow"] .city-scene {
+  --city-far: #869aa6; --city-wall: #6b808e; --city-side: #596f7e;
+  --city-sidewalk: #b1c2c7; --city-leaf: #577b78;
+  --city-leaf-light: #6f9390;
+}
+body[data-weather="snow"] .tree-snow, body[data-weather="snow"] .street-snow { opacity: .85; }
+body[data-weather="snow"] .building-roof { fill: #d9e6e9; }
+body[data-weather="snow"][data-intensity="light"] .tree-snow,
+body[data-weather="snow"][data-intensity="light"] .street-snow { opacity: .35; }
+body[data-weather="snow"][data-intensity="moderate"] .tree-snow,
+body[data-weather="snow"][data-intensity="moderate"] .street-snow { opacity: .6; }
+body[data-weather="atmosphere"] .city-scene { opacity: .5; }
+body[data-period="night"] .city-scene {
+  --city-far: #39485d; --city-wall: #273d50; --city-side: #203345;
+  --city-roof: #213446; --city-window: #78909e; --city-window-lit: #edc887;
+  --city-ground: #293e3d; --city-sidewalk: #40535c; --city-road: #20323e;
+  --city-leaf: #254840; --city-leaf-light: #315a4e;
+}
+body[data-period="night"] .window-lit { opacity: .85; }
+body[data-period="night"] .lamp-glow { opacity: .2; }
+body[data-period="night"] .lamp-light { opacity: 1; fill: #ffe0a1; }
+body[data-period="night"] .headlight-beam { opacity: .09; }
+body[data-period="night"][data-weather="snow"] .building-roof { fill: #91a9b9; }
+
+/* Keep the information readable when a short viewport puts buildings behind it. */
+.location, .current, .updated, .status { position: relative; text-shadow: 0 2px 12px var(--color-shadow); }
+footer { background: linear-gradient(transparent, #182c3d80); }
+@keyframes city-travel { from { transform: translateX(-100px); } to { transform: translateX(1540px); } }
+/* 5.6-unit thighs/shins: a planted foot travels +5 to -5 during half a gait.
+   Sampled joint angles follow that contact path; the return bends the knee and lifts the foot. */
+@keyframes city-walk-bob {
+  0%, 50%, 100% { transform: translateY(0px); }
+  6.25%, 56.25% { transform: translateY(-0.19px); }
+  12.5%, 62.5% { transform: translateY(-0.65px); }
+  18.75%, 68.75% { transform: translateY(-1.11px); }
+  25%, 75% { transform: translateY(-1.3px); }
+  31.25%, 81.25% { transform: translateY(-1.11px); }
+  37.5%, 87.5% { transform: translateY(-0.65px); }
+  43.75%, 93.75% { transform: translateY(-0.19px); }
+}
+@keyframes city-walk-thigh {
+  0%, 100% { transform: rotate(-37.83deg); }
+  6.25% { transform: rotate(-38.25deg); }
+  12.5% { transform: rotate(-29.84deg); }
+  18.75% { transform: rotate(-17.89deg); }
+  25% { transform: rotate(-7.66deg); }
+  31.25% { transform: rotate(-4.81deg); }
+  37.5% { transform: rotate(-2.94deg); }
+  43.75% { transform: rotate(2.89deg); }
+  50% { transform: rotate(16.24deg); }
+  56.25% { transform: rotate(3.83deg); }
+  62.5% { transform: rotate(-7.09deg); }
+  68.75% { transform: rotate(-23.47deg); }
+  75% { transform: rotate(-42.18deg); }
+  81.25% { transform: rotate(-55.33deg); }
+  87.5% { transform: rotate(-58.66deg); }
+  93.75% { transform: rotate(-53.5deg); }
+}
+@keyframes city-walk-shin {
+  0%, 100% { transform: rotate(21.59deg); }
+  6.25% { transform: rotate(35.36deg); }
+  12.5% { transform: rotate(32.78deg); }
+  18.75% { transform: rotate(22.7deg); }
+  25% { transform: rotate(15.32deg); }
+  31.25% { transform: rotate(22.7deg); }
+  37.5% { transform: rotate(32.78deg); }
+  43.75% { transform: rotate(35.36deg); }
+  50% { transform: rotate(21.59deg); }
+  56.25% { transform: rotate(49.67deg); }
+  62.5% { transform: rotate(65.75deg); }
+  68.75% { transform: rotate(78.79deg); }
+  75% { transform: rotate(84.35deg); }
+  81.25% { transform: rotate(78.79deg); }
+  87.5% { transform: rotate(65.75deg); }
+  93.75% { transform: rotate(49.67deg); }
+}
+@keyframes city-walk-foot {
+  0%, 100% { transform: rotate(16.24deg); }
+  6.25% { transform: rotate(2.89deg); }
+  12.5% { transform: rotate(-2.94deg); }
+  18.75% { transform: rotate(-4.81deg); }
+  25% { transform: rotate(-7.66deg); }
+  31.25% { transform: rotate(-17.89deg); }
+  37.5% { transform: rotate(-29.84deg); }
+  43.75% { transform: rotate(-38.25deg); }
+  50% { transform: rotate(-37.83deg); }
+  56.25% { transform: rotate(-49.55deg); }
+  62.5% { transform: rotate(-51.36deg); }
+  68.75% { transform: rotate(-45.8deg); }
+  75% { transform: rotate(-31.86deg); }
+  81.25% { transform: rotate(-13.94deg); }
+  87.5% { transform: rotate(0.2deg); }
+  93.75% { transform: rotate(7.78deg); }
+}
+@keyframes city-walk-arm {
+  0%, 100% { transform: rotate(22deg); }
+  25%, 75% { transform: rotate(0deg); }
+  50% { transform: rotate(-22deg); }
+}
+@keyframes city-walk-shadow {
+  0%, 50%, 100% { transform: scaleX(1); opacity: .25; }
+  25%, 75% { transform: scaleX(.9); opacity: .2; }
+}
+@keyframes city-tree-sway { from { transform: rotate(-1deg); } to { transform: rotate(1.5deg); } }
+@keyframes city-rain-fall {
+  0% { opacity: 0; transform: translate(var(--particle-x), var(--particle-top)); }
+  15%, 82% { opacity: var(--particle-opacity); }
+  100% { opacity: 0; transform: translate(calc(var(--particle-x) + var(--particle-drift)), calc(var(--particle-top) + var(--particle-fall))); }
+}
+@keyframes city-snow-fall {
+  0% { opacity: 0; transform: translate(var(--particle-x), var(--particle-top)); }
+  15% { opacity: var(--particle-opacity); }
+  45% { transform: translate(calc(var(--particle-x) + var(--particle-drift)), calc(var(--particle-top) + var(--particle-fall) * .45)); }
+  75% { transform: translate(calc(var(--particle-x) - var(--particle-drift) * .3), calc(var(--particle-top) + var(--particle-fall) * .75)); }
+  88% { opacity: var(--particle-opacity); }
+  100% { opacity: 0; transform: translate(calc(var(--particle-x) + var(--particle-drift) * .5), calc(var(--particle-top) + var(--particle-fall))); }
+}
+@keyframes city-ripple {
+  0% { opacity: 0; transform: scale(.4); }
+  25% { opacity: .38; }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+@media (max-width: 40rem) {
+  .city-scene { bottom: 2.75rem; height: clamp(13rem, 29vh, 17rem); opacity: .8; }
+  .city-panorama { width: 52rem; }
+}
+@media (max-height: 42rem) and (orientation: landscape) {
+  .city-scene { height: 13rem; opacity: .65; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .city-car, .city-person { animation: none !important; transform: translateX(var(--park-x)); }
+  .tree-crown, .person-body, .person-thigh, .person-shin, .person-foot,
+  .person-arm-swing, .person-walk-shadow { animation: none !important; }
+  .city-rain, .city-snow { display: none !important; }
+}

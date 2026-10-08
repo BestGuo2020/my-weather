@@ -10,8 +10,10 @@ A lightweight, responsive weather page with animated weather scenes, multilingua
 
 - Current temperature, weather condition, feels-like temperature, humidity, wind speed, and daily low/high
 - Animated scenes for clear skies, clouds, rain, snow, thunderstorms, and mist
-- Layered, rotating snowflakes with light, moderate, and heavy snowfall variants
+- Rain and snow are confined to the miniature city, with three depth layers and intensity tiers; rain adds umbrellas, reflections and ripples, while snow covers roofs, trees and street edges
 - Day and night presentation based on the selected location
+- Cloud cover controls distinct clear, fair, cloudy and overcast skies, with rain/snow/storm cloud forms; daylight stays bright and night palettes remain independent
+- Layered streets adapt building heights, spacing and trees to the nearby LCZ class, alongside weather effects. Global LCZ Map v3 uses ~100 m resolution and a nominal 2018 reference year; missing data falls back to a generic street ([classification and data notes](./docs/city-scene.md)).
 - Search powered by OpenWeather and Open-Meteo geocoding
 - Disambiguation menu for places with identical names
 - Relevance filtering that prioritizes exact place-name matches over fuzzy matches
@@ -39,6 +41,8 @@ When several places match, the page displays their administrative region, countr
 
 OpenWeather returns at most five geocoding results, so the app supplements its results with Open-Meteo and removes duplicate or weakly related candidates. Weather conditions are fetched by the selected coordinates.
 
+Searching for Longhua District retains the districts in both Shenzhen and Haikou as separate choices. Chinese queries such as `龙华区天气` are also supported. The page and browser title retain the selected place's name through refreshes and language changes, even when the weather API labels those coordinates with a nearby subdistrict. Unmatched searches display a place-not-found message.
+
 ## Controls
 
 | Control | Purpose |
@@ -60,10 +64,11 @@ On EdgeOne Pages, the site first requests the same-origin `/api/ip-location` edg
 
 ### Requirements
 
-My Weather is a static website built with HTML, CSS, and JavaScript. **Node.js is not required to run or deploy the application.**
+My Weather builds TypeScript into static HTML, CSS, and JavaScript. LCZ data is read on demand through a same-origin edge function.
 
-- Without Node.js, deploy the contents of `src/` directly to any static web server.
-- Node.js 18 or newer and npm are only required when you want to generate the minified production files in `dist/`.
+- Local builds and previews require Node.js 20.11 or newer and npm.
+- Deploy the built `dist/` alongside the root `edge-functions/` and `lib/` directories, supported by EdgeOne Pages.
+- Static-only hosting can show weather and the generic street; actual LCZ backgrounds require `/api/lcz-raster`.
 - Visitors only need a modern browser.
 
 ### Build an optimized version
@@ -75,7 +80,7 @@ npm run build
 
 This step bundles and minifies the source files. The optimized site is generated in `dist/`.
 
-If Node.js is unavailable, skip this step and use `src/` as the website root instead.
+`src/` contains TypeScript source. Use the built `dist/` for deployment.
 
 ### Preview locally
 
@@ -89,17 +94,17 @@ Then open:
 http://127.0.0.1:4173/
 ```
 
-The preview command serves the production build without caching. To preview the unbuilt source, serve `src/` with any static web server.
+Build first, then preview. The server disables page caching and runs the LCZ raster proxy, enabling real local-form checks. Existing IP fallback remains available when device location fails.
 
 ## OpenWeather API Key
 
-The weather and OpenWeather geocoding requests use the `API_KEY` constant in `src/script.js`.
+The weather and OpenWeather geocoding requests use the `API_KEY` constant in `src/script.ts`.
 
 To use your own key:
 
 1. Create an account at [OpenWeather](https://openweathermap.org/).
 2. Generate an API key.
-3. Replace the `API_KEY` value in `src/script.js`.
+3. Replace the `API_KEY` value in `src/script.ts`.
 4. Rebuild the project with `npm run build`.
 
 ## Project Structure
@@ -111,10 +116,15 @@ To use your own key:
 ├── raw/                    # Original/reference implementation
 ├── src/
 │   ├── index.html          # Page structure
-│   ├── script.js           # Weather, geocoding, UI, audio, and effects
+│   ├── script.ts           # Weather, geocoding, UI, audio, and effects
+│   ├── city-profile.ts     # LCZ types and visual tiers
+│   ├── city-scene.ts       # Street generation
+│   ├── lcz-data.ts         # Windowed raster reads
 │   ├── style.css           # Layout, weather scenes, and responsive styles
 │   └── tokens.css          # Design tokens
-├── build.mjs               # Production build pipeline
+├── edge-functions/         # Same-origin location and LCZ proxies
+├── tools/preview.mjs       # Local page and API preview
+├── build.ts                # Production build pipeline
 ├── package.json
 ├── README.md
 └── README.zh-CN.md

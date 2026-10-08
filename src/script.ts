@@ -1,6 +1,10 @@
 "use strict";
 
 import { BrowserLocationError, getGpsCoordinates, getIpCoordinates, locationFeedback, type Coordinates, type LocationDiagnostics } from "./location";
+import { distanceKm, fromOpenMeteo, mergePlaceSources, normalizeCityName, type CityPlace } from "./city-profile";
+import { renderCityScene } from "./city-scene";
+import { createLczClient } from "./lcz-client";
+import { renderSkyScene, skyProfile } from "./sky-scene";
 
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
@@ -33,7 +37,9 @@ const supportedLanguages = Object.keys(localeMap);
 const requestedLanguage = new URLSearchParams(location.search).get("lang");
 const showLocationDiagnostics = new URLSearchParams(location.search).get("debug") === "location";
 const initialLanguage = supportedLanguages.includes(requestedLanguage) ? requestedLanguage : localStorage.getItem("weather-language");
-const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0, locationDiagnostics: null as LocationDiagnostics | null };
+const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", place: null as CityPlace | null, pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0, locationDiagnostics: null as LocationDiagnostics | null };
+const lczClient = createLczClient();
+let lczController: AbortController | null = null;
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing required element: ${selector}`);
@@ -47,7 +53,8 @@ const elements = {
   icon: $("#weather-icon"), status: $("#status"), updated: $<HTMLTimeElement>("#updated-time"),
   placeMenu: $("#place-menu"), placeOptions: $("#place-options"),
   locationFeedback: $("#location-feedback"), locationMessage: $("#location-message"),
-  locationDetails: $<HTMLDetailsElement>("#location-details"), locationSummary: $("#location-summary"), locationDebug: $("#location-debug")
+  locationDetails: $<HTMLDetailsElement>("#location-details"), locationSummary: $("#location-summary"), locationDebug: $("#location-debug"),
+  cityScene: $("#city-scene"), skyClouds: $("#sky-clouds")
 };
 
 function t(key) { return translations[state.lang][key] || translations.en[key] || key; }
@@ -103,77 +110,6 @@ function weatherIntensity(id) {
   return "moderate";
 }
 
-function populateRain(intensity) {
-  const scene = $(".scene-rain");
-  if (scene.dataset.intensity === intensity) return;
-  scene.dataset.intensity = intensity;
-  const totals = { light: 36, moderate: 56, heavy: 82 };
-  const layers = [
-    { selector: ".rain-far", share: .25, size: .45, duration: 1.75, opacity: .55 },
-    { selector: ".rain-mid", share: .34, size: .66, duration: 1.35, opacity: .78 },
-    { selector: ".rain-near", share: .41, size: .9, duration: 1.05, opacity: 1 }
-  ];
-  layers.forEach((config) => {
-    const layer = $(config.selector);
-    layer.replaceChildren();
-    const count = Math.round(totals[intensity] * config.share);
-    for (let index = 0; index < count; index += 1) {
-      const drop = document.createElement("span");
-      const duration = config.duration * (.82 + Math.random() * .36);
-      const size = config.size * (.68 + Math.random() * .64);
-      drop.className = "rain-drop";
-      drop.style.setProperty("--drop-x", `${Math.random() * 112 - 6}%`);
-      drop.style.setProperty("--drop-y", `${Math.random() * 115 - 18}%`);
-      drop.style.setProperty("--drop-size", `${size.toFixed(2)}rem`);
-      drop.style.setProperty("--drop-duration", `${duration.toFixed(2)}s`);
-      drop.style.setProperty("--drop-delay", `${(-Math.random() * duration).toFixed(2)}s`);
-      drop.style.setProperty("--drop-opacity", `${(config.opacity * (.72 + Math.random() * .28)).toFixed(2)}`);
-      layer.append(drop);
-    }
-  });
-}
-
-function populateSnow(intensity) {
-  const scene = $(".scene-snow");
-  if (scene.dataset.intensity === intensity) return;
-  scene.dataset.intensity = intensity;
-  const totals = { light: 42, moderate: 68, heavy: 96 };
-  const layers = [
-    { selector: ".snow-far", share: .34, size: .48, duration: 15, opacity: .42 },
-    { selector: ".snow-mid", share: .38, size: .76, duration: 10.5, opacity: .7 },
-    { selector: ".snow-near", share: .28, size: 1.08, duration: 7.5, opacity: .94 }
-  ];
-  const shapes = ["❄", "❅", "❆"];
-  layers.forEach((config) => {
-    const layer = $(config.selector);
-    layer.replaceChildren();
-    const count = Math.round(totals[intensity] * config.share);
-    for (let index = 0; index < count; index += 1) {
-      const flake = document.createElement("span");
-      const shape = document.createElement("i");
-      const duration = config.duration * (.78 + Math.random() * .44);
-      const size = config.size * (.68 + Math.random() * .64);
-      const sway = size * (1.1 + Math.random() * 2.2);
-      const turns = (Math.random() > .5 ? 1 : -1) * (1 + Math.floor(Math.random() * 2));
-      flake.className = "snow-flake";
-      flake.style.setProperty("--snow-x", `${(Math.random() * 104 - 2).toFixed(2)}vw`);
-      flake.style.setProperty("--snow-size", `${size.toFixed(2)}rem`);
-      flake.style.setProperty("--snow-duration", `${duration.toFixed(2)}s`);
-      flake.style.setProperty("--snow-delay", `${(-Math.random() * duration).toFixed(2)}s`);
-      flake.style.setProperty("--snow-sway", `${sway.toFixed(2)}rem`);
-      flake.style.setProperty("--snow-sway-back", `${(-sway * .45).toFixed(2)}rem`);
-      flake.style.setProperty("--snow-sway-end", `${(sway * .25).toFixed(2)}rem`);
-      flake.style.setProperty("--snow-opacity", `${(config.opacity * (.72 + Math.random() * .28)).toFixed(2)}`);
-      flake.style.setProperty("--snow-turns", `${turns}turn`);
-      shape.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-      shape.style.setProperty("--spin-duration", `${(3.8 + Math.random() * 5.6).toFixed(2)}s`);
-      shape.style.setProperty("--spin-delay", `${(-Math.random() * 6).toFixed(2)}s`);
-      flake.append(shape);
-      layer.append(flake);
-    }
-  });
-}
-
 function updateDate(timestamp = Date.now() / 1000, timezone = 0) {
   const utcMs = (timestamp + timezone) * 1000;
   elements.date.textContent = new Intl.DateTimeFormat(localeMap[state.lang], {
@@ -187,12 +123,15 @@ function renderWeather(data) {
   const isNight = data.weather[0].icon.endsWith("n");
   document.body.dataset.weather = type === "drizzle" ? "rain" : type;
   document.body.dataset.period = isNight ? "night" : "day";
+  renderSkyScene(elements.skyClouds, skyProfile(type, data.weather[0].id, data.clouds?.all));
   document.body.dataset.intensity = intensity;
   elements.icon.className = `weather-icon icon-${type} intensity-${intensity}`;
-  if (type === "rain" || type === "drizzle" || type === "thunderstorm") populateRain(intensity);
-  if (type === "snow") populateSnow(intensity);
   const fallbackName = placeNameFallbacks[state.lang]?.[data.name];
-  elements.city.textContent = `${state.placeName || fallbackName || data.name}, ${data.sys.country}`;
+  const language = localeMap[state.lang].split("-")[0];
+  const localizedName = state.place?.localNames?.[state.lang] || state.place?.localNames?.[language];
+  const placeName = localizedName || state.placeName || fallbackName || data.name;
+  elements.city.textContent = `${placeName}, ${state.place?.country || data.sys.country}`;
+  if (state.place) renderCityScene(elements.cityScene, state.place);
   updateDate(data.dt, data.timezone);
   elements.temp.innerHTML = `${Math.round(data.main.temp)}<span>°c</span>`;
   elements.weather.textContent = data.weather[0].description || t(type);
@@ -204,7 +143,7 @@ function renderWeather(data) {
   const updatedAt = state.updatedAt || new Date();
   elements.updated.dateTime = updatedAt.toISOString();
   elements.updated.textContent = new Intl.DateTimeFormat(localeMap[state.lang], { hour: "2-digit", minute: "2-digit" }).format(updatedAt);
-  document.title = `${Math.round(data.main.temp)}° · ${data.name} | My Weather`;
+  document.title = `${Math.round(data.main.temp)}° · ${placeName} | My Weather`;
   if (state.sound) restartWeatherSound(type);
 }
 
@@ -217,7 +156,8 @@ function localizedPlace(place) {
     name: localizedName || placeNameFallbacks[state.lang]?.[place.name] || place.name,
     searchName: place.name,
     state: place.state || "",
-    country: place.country || ""
+    country: place.country || "",
+    localNames: { en: place.name, ...place.local_names }
   };
 }
 
@@ -249,14 +189,7 @@ async function getOpenMeteoPlaces(search, signal) {
     const response = await fetch(`${OPEN_METEO_GEO_URL}?${query}`, { signal });
     if (!response.ok) return [];
     const data = await response.json();
-    return (data.results || []).map((place) => ({
-      lat: place.latitude,
-      lon: place.longitude,
-      name: place.name,
-      searchName: place.name,
-      state: place.admin1 || place.admin2 || "",
-      country: place.country_code || ""
-    }));
+    return (data.results || []).map(fromOpenMeteo);
   } catch {
     return [];
   }
@@ -266,19 +199,12 @@ async function getPlaces(params, signal) {
   const sources = params.q
     ? await Promise.all([getOpenWeatherPlaces(params, signal), getOpenMeteoPlaces(params.q, signal)])
     : [await getOpenWeatherPlaces(params, signal)];
-  const unique = new Map();
-  sources.flat().forEach((place) => {
-      const key = [place.name, place.state, place.country]
-        .map((part) => part.trim().toLocaleLowerCase())
-        .join("|");
-      if (!unique.has(key)) unique.set(key, place);
-  });
-  const places = [...unique.values()];
+  const places = mergePlaceSources(sources);
   if (!params.q) return places;
 
   const searchTerm = params.q.split(",")[0].normalize("NFKC").trim().toLocaleLowerCase();
   const relevance = (place) => {
-    const names = [place.name, place.searchName]
+    const names = [place.name, place.searchName, ...Object.values(place.localNames || {})]
       .filter(Boolean)
       .map((name) => name.normalize("NFKC").trim().toLocaleLowerCase());
     if (names.some((name) => name === searchTerm)) return 0;
@@ -286,9 +212,11 @@ async function getPlaces(params, signal) {
     return 2;
   };
   const ranked = places.map((place) => ({ place, rank: relevance(place) }));
-  const hasRelevantMatch = ranked.some(({ rank }) => rank < 2);
+  const hasExactMatch = ranked.some(({ rank }) => rank === 0);
+  // An explicit district/county name must not match a shorter town name.
+  const requireExactMatch = hasExactMatch || /(?:区|县)$/.test(searchTerm);
   return ranked
-    .filter(({ rank }) => !hasRelevantMatch || rank < 2)
+    .filter(({ rank }) => requireExactMatch ? rank === 0 : rank < 2)
     .sort((a, b) => a.rank - b.rank)
     .map(({ place }) => place);
 }
@@ -330,7 +258,34 @@ function showPlaceMenu(places) {
   elements.status.textContent = t("chooseLocation");
 }
 
-async function getWeather(params, selectedPlace = null) {
+async function enrichUrbanForm(place: CityPlace) {
+  lczController?.abort();
+  if (place.urbanForm) { elements.cityScene.dataset.lczStatus = "ready"; return; }
+  const controller = new AbortController();
+  lczController = controller;
+  const timeout = window.setTimeout(() => controller.abort(), 30000);
+  elements.cityScene.dataset.lczStatus = "loading";
+  try {
+    const form = await lczClient.read(place.lat, place.lon, controller.signal);
+    if (state.place !== place || controller.signal.aborted) return;
+    elements.cityScene.dataset.lczStatus = form ? "ready" : "unavailable";
+    if (form) {
+      state.place = { ...place, urbanForm: form };
+      renderCityScene(elements.cityScene, state.place);
+    }
+  } catch (error) {
+    console.debug("LCZ lookup unavailable:", error instanceof Error ? error.message : String(error));
+    if (state.place === place) elements.cityScene.dataset.lczStatus = "unavailable";
+  } finally {
+    window.clearTimeout(timeout);
+    if (state.place === place && controller.signal.aborted) elements.cityScene.dataset.lczStatus = "unavailable";
+  }
+}
+
+async function getWeather(params, selectedPlace: CityPlace | null = null) {
+  if (params.q) {
+    params = { ...params, q: params.q.normalize("NFKC").trim().replace(/(?:的)?(?:实时)?天气(?=\s*(?:,|$))/, "").trim() };
+  }
   elements.status.textContent = t("loading");
   elements.input.disabled = true;
   elements.locate.disabled = true;
@@ -338,21 +293,39 @@ async function getWeather(params, selectedPlace = null) {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 10000);
   try {
+    if (params.q !== undefined && !params.q.split(",")[0].trim()) throw new Error("notFound");
     const places = selectedPlace ? [selectedPlace] : await getPlaces(params, controller.signal);
+    // The weather API's legacy name lookup can resolve an unmatched district
+    // to another place. Only query weather after a named place is resolved.
+    if (params.q && !places.length) throw new Error("notFound");
     if (params.q && places.length > 1) {
       showPlaceMenu(places);
       return;
     }
-    const place = places[0] || null;
+    let place: CityPlace | null = places[0] || null;
+    const previous = state.place;
+    if (!selectedPlace && !params.q && previous && params.lat === previous.lat && params.lon === previous.lon) {
+      // Reverse geocoding may resolve the city centre to a district. Retain the
+      // selected city's identity and tier; only use translations of that same city.
+      const previousNames = [previous.name, previous.searchName, ...Object.values(previous.localNames || {})]
+        .filter(Boolean).map(normalizeCityName);
+      const sameCity = place && place.country === previous.country && distanceKm(place, previous) < 20
+        && [place.name, place.searchName, ...Object.values(place.localNames || {})]
+          .filter(Boolean).some(name => previousNames.includes(normalizeCityName(name)));
+      place = sameCity ? { ...previous, localNames: { ...previous.localNames, ...place.localNames } } : previous;
+    }
     const weatherParams = place ? { lat: place.lat, lon: place.lon } : params;
-    state.placeName = place?.name || "";
     const query = new URLSearchParams({ ...weatherParams, appid: API_KEY, units: "metric", lang: state.lang });
     const response = await fetch(`${API_URL}?${query}`, { signal: controller.signal });
     if (!response.ok) throw new Error(response.status === 404 ? "notFound" : "apiError");
     state.data = await response.json();
+    state.placeName = place?.name || "";
+    state.place = place || { name: state.data.name, country: state.data.sys.country,
+      lat: state.data.coord?.lat ?? params.lat ?? 52.24, lon: state.data.coord?.lon ?? params.lon ?? -.89 };
     state.lastQuery = place ? { lat: place.lat, lon: place.lon } : params;
     state.updatedAt = new Date();
     renderWeather(state.data);
+    void enrichUrbanForm(state.place);
     window.clearTimeout(state.refreshTimer);
     state.refreshTimer = window.setTimeout(() => getWeather(state.lastQuery), REFRESH_INTERVAL);
     elements.input.value = "";
@@ -538,6 +511,7 @@ elements.fullscreen.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenLabel);
 
 applyLanguage();
+renderCityScene(elements.cityScene, { name: "Northampton", country: "GB", lat: 52.24, lon: -.89 });
 // On mobile, request device location from the user's click, like the working reference.
 const mobileBrowser = /Android|iPhone|iPad/i.test(navigator.userAgent);
 useLocation({ fallbackToDefault: true, ipOnly: mobileBrowser, automatic: true });

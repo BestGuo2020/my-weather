@@ -1,5 +1,6 @@
 :root {
   --color-paper: oklch(98% 0.01 88);
+  --color-text: var(--color-paper);
   --color-paper-soft: oklch(96% 0.014 88 / 0.72);
   --color-ink: oklch(22% 0.025 250);
   --color-ink-soft: oklch(24% 0.025 250 / 0.72);
@@ -12,8 +13,8 @@
   --color-glass: oklch(100% 0 0 / 0.24);
   --color-glass-strong: oklch(100% 0 0 / 0.48);
   --color-rain-drop: oklch(88% 0.13 242 / 0.96);
-  --color-clear-top: oklch(76% 0.13 238);
-  --color-clear-bottom: oklch(86% 0.13 82);
+  --color-clear-top: #82d2f3;
+  --color-clear-bottom: #e8f8ff;
   --color-cloud-top: oklch(55% 0.045 238);
   --color-cloud-bottom: oklch(73% 0.035 238);
   --color-rain-top: oklch(40% 0.055 242);

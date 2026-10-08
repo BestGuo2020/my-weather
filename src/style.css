@@ -2,6 +2,8 @@
  * Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 · contrast: pass (40–41) · mobile: pass (34, 49, 50–57)
  */
 @import url("./tokens.css");
+@import url("./city-scene.css");
+@import url("./sky-scene.css");
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { min-width: 0; min-height: 100%; overflow-x: clip; }
@@ -9,17 +11,11 @@ button, input { font: inherit; }
 button { white-space: nowrap; }
 body {
   min-height: 100svh;
-  color: var(--color-paper);
+  color: var(--color-text);
   font-family: var(--font-body);
-  background: linear-gradient(155deg, var(--color-clear-top), var(--color-clear-bottom));
+  background: linear-gradient(180deg, var(--sky-top), var(--sky-bottom));
   transition: background var(--dur-weather) var(--ease-in-out);
 }
-body[data-period="night"] { background: linear-gradient(155deg, var(--color-night-top), var(--color-night-bottom)); }
-body[data-weather="clouds"] { background: linear-gradient(155deg, var(--color-cloud-top), var(--color-cloud-bottom)); }
-body[data-weather="rain"] { background: linear-gradient(155deg, var(--color-rain-top), var(--color-rain-bottom)); }
-body[data-weather="thunderstorm"] { background: linear-gradient(155deg, var(--color-storm-top), var(--color-storm-bottom)); }
-body[data-weather="snow"] { background: linear-gradient(155deg, var(--color-snow-top), var(--color-snow-bottom)); }
-body[data-weather="atmosphere"] { background: linear-gradient(155deg, var(--color-mist-top), var(--color-mist-bottom)); }
 
 .app-wrap {
   position: relative;
@@ -121,13 +117,13 @@ body[data-weather="atmosphere"] { background: linear-gradient(155deg, var(--colo
 .controls { display: flex; align-items: center; gap: var(--space-xs); }
 .control-button, .language-button {
   min-height: 3rem; border: 1px solid transparent; outline: 2px solid transparent; outline-offset: 1px;
-  background: var(--color-glass); color: var(--color-paper); border-radius: var(--radius-round);
+  background: var(--color-glass); color: var(--color-text); border-radius: var(--radius-round);
   cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .control-button { width: 3rem; }
 .github-button {
   display: grid; place-items: center; flex: 0 0 auto;
-  color: var(--color-paper); font-size: var(--text-xs); font-weight: 800;
+  color: var(--color-text); font-size: var(--text-xs); font-weight: 800;
   letter-spacing: -.04em; text-decoration: none;
 }
 .control-button:hover, .language-button:hover { background: var(--color-glass-strong); }
@@ -168,22 +164,22 @@ main {
   display: flex; flex-direction: column; align-items: center; text-align: center;
 }
 .location .city {
-  margin-bottom: var(--space-xs); color: var(--color-paper); font-family: var(--font-display);
+  margin-bottom: var(--space-xs); color: var(--color-text); font-family: var(--font-display);
   font-size: var(--text-xl); font-weight: 600; overflow-wrap: anywhere; min-width: 0;
 }
-.location .date { color: var(--color-paper); font-size: var(--text-md); }
+.location .date { color: var(--color-text); font-size: var(--text-md); }
 .current { display: flex; flex-direction: column; align-items: center; }
 .current .temp {
-  color: var(--color-paper); font-family: var(--font-display); font-size: var(--text-display);
+  color: var(--color-text); font-family: var(--font-display); font-size: var(--text-display);
   line-height: .95; font-weight: 900; margin: var(--space-sm) 0;
   text-shadow: 2px 10px var(--color-shadow); overflow-wrap: anywhere; min-width: 0;
 }
 .current .temp span { font-size: .42em; font-weight: 500; vertical-align: top; line-height: 1.7; }
 .current .weather {
-  color: var(--color-paper); font-size: var(--text-xl); font-weight: 700;
+  color: var(--color-text); font-size: var(--text-xl); font-weight: 700;
   margin-bottom: var(--space-sm); text-shadow: 0 3px var(--color-shadow);
 }
-.current .hi-low { color: var(--color-paper); font-size: var(--text-lg); font-weight: 500; text-shadow: 0 4px var(--color-shadow); }
+.current .hi-low { color: var(--color-text); font-size: var(--text-lg); font-weight: 500; text-shadow: 0 4px var(--color-shadow); }
 .details {
   margin-top: var(--space-lg); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-xs);
   font-size: var(--text-sm);
@@ -191,11 +187,11 @@ main {
 .details span { padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-round); background: var(--color-glass); }
 .details b { font-weight: 600; }
 .details i { font-style: normal; }
-.status { min-height: 1.5em; margin-top: var(--space-md); color: var(--color-paper); font-size: var(--text-sm); }
+.status { min-height: 1.5em; margin-top: var(--space-md); color: var(--color-text); font-size: var(--text-sm); }
 .location-feedback {
   max-width: 36rem; margin: var(--space-sm) auto; padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-glass); border-radius: .5rem;
-  background: var(--color-glass); color: var(--color-paper); text-align: left;
+  background: var(--color-glass); color: var(--color-text); text-align: left;
   font-size: var(--text-sm); line-height: 1.6; overflow-wrap: anywhere;
 }
 .location-feedback[hidden] { display: none; }
@@ -204,8 +200,8 @@ main {
 .location-feedback details { margin-top: var(--space-2xs); }
 .location-feedback summary { cursor: pointer; }
 .location-feedback pre { margin: var(--space-xs) 0 0; white-space: pre-wrap; font: inherit; font-size: var(--text-xs); }
-.updated { margin-top: var(--space-2xs); color: var(--color-paper); font-size: var(--text-xs); opacity: .78; }
-footer { padding: var(--space-sm) var(--space-md) var(--space-md); text-align: center; color: var(--color-paper); font-size: var(--text-xs); opacity: .75; }
+.updated { margin-top: var(--space-2xs); color: var(--color-text); font-size: var(--text-xs); opacity: .78; }
+footer { padding: var(--space-sm) var(--space-md) var(--space-md); text-align: center; color: var(--color-text); font-size: var(--text-xs); opacity: .75; }
 footer a {
   border-radius: .2rem;
   color: inherit;
@@ -274,67 +270,7 @@ body[data-period="night"] .icon-clouds .moon { opacity: 1; }
 }
 
 .weather-scene { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
-.scene-orb { position: absolute; width: 34vmin; height: 34vmin; top: 9%; right: 8%; border-radius: 50%; background: var(--color-accent); opacity: .18; transition: opacity var(--dur-weather) var(--ease-in-out); }
-.scene-cloud { position: absolute; width: 28rem; height: 7rem; border-radius: var(--radius-round); background: var(--color-glass); filter: blur(1px); opacity: 0; }
-.scene-cloud-a { top: 20%; left: -6rem; animation: cloud-drift 28s linear infinite; }
-.scene-cloud-b { top: 46%; right: -12rem; animation: cloud-drift 38s linear infinite reverse; }
-.scene-rain, .scene-snow { position: absolute; inset: 0; opacity: 0; transition: opacity var(--dur-weather) var(--ease-in-out); }
-.rain-layer { position: absolute; inset: 0; display: block; }
-.rain-drop {
-  position: absolute; left: var(--drop-x); top: var(--drop-y);
-  width: var(--drop-size); aspect-ratio: .74;
-  opacity: var(--drop-opacity);
-  animation: rain-drop-fall var(--drop-duration) linear infinite;
-  animation-delay: var(--drop-delay);
-  will-change: transform;
-}
-.rain-drop::before {
-  content: ""; position: absolute; inset: 0;
-  background: var(--color-rain-drop);
-  border-radius: 65% 45% 62% 58%;
-  clip-path: polygon(50% 0, 72% 34%, 94% 61%, 94% 78%, 78% 96%, 50% 100%, 22% 96%, 6% 78%, 6% 61%, 28% 34%);
-  transform: rotate(-12deg);
-}
-.rain-far .rain-drop { filter: blur(.2px); }
-.rain-mid .rain-drop { filter: drop-shadow(0 0 .22rem var(--color-rain-drop)); }
-.rain-near .rain-drop { filter: drop-shadow(0 .15rem .32rem var(--color-rain-drop)); }
-.snow-layer { position: absolute; inset: 0; display: block; overflow: hidden; }
-.snow-flake {
-  position: absolute; left: 0; top: -12vh;
-  width: var(--snow-size); height: var(--snow-size);
-  color: var(--color-paper); font-size: var(--snow-size); line-height: 1;
-  opacity: 0;
-  animation: scene-snow-fall var(--snow-duration) linear infinite;
-  animation-delay: var(--snow-delay);
-  will-change: transform, opacity;
-}
-.snow-flake i {
-  display: block; width: 100%; height: 100%; font-style: normal;
-  transform-origin: 50% 50%;
-  animation: snow-flake-spin var(--spin-duration) linear infinite;
-  animation-delay: var(--spin-delay);
-  will-change: transform;
-}
-.snow-far .snow-flake {
-  color: var(--color-paper);
-  filter: blur(.35px) drop-shadow(0 0 .18rem var(--color-paper));
-}
-.snow-mid .snow-flake {
-  filter: drop-shadow(0 0 .24rem var(--color-paper));
-}
-.snow-near .snow-flake {
-  filter: drop-shadow(0 0 .32rem var(--color-paper)) drop-shadow(0 .12rem .2rem var(--color-shadow));
-}
-body[data-weather="clouds"] .scene-cloud, body[data-weather="rain"] .scene-cloud, body[data-weather="thunderstorm"] .scene-cloud { opacity: .22; }
-body[data-weather="rain"][data-intensity="light"] .scene-rain { opacity: .78; }
-body[data-weather="rain"][data-intensity="moderate"] .scene-rain { opacity: .88; }
-body[data-weather="rain"][data-intensity="heavy"] .scene-rain, body[data-weather="thunderstorm"] .scene-rain { opacity: 1; }
-body[data-weather="snow"][data-intensity="light"] .scene-snow { opacity: .68; }
-body[data-weather="snow"][data-intensity="moderate"] .scene-snow { opacity: .86; }
-body[data-weather="snow"][data-intensity="heavy"] .scene-snow { opacity: 1; }
-body[data-weather="rain"] .scene-orb, body[data-weather="thunderstorm"] .scene-orb, body[data-weather="atmosphere"] .scene-orb { opacity: 0; }
 
-@keyframes cloud-drift { from { transform: translateX(-8vw); } to { transform: translateX(115vw); } }
 @keyframes snow-fall { from { background-position: 0 0; } to { background-position: 2rem 5rem; } }
 @keyframes icon-rain-fall {
   0% { opacity: 0; transform: translate3d(-.18rem, -.5rem, 0) rotate(-12deg); }
@@ -342,19 +278,6 @@ body[data-weather="rain"] .scene-orb, body[data-weather="thunderstorm"] .scene-o
   82% { opacity: 1; }
   100% { opacity: 0; transform: translate3d(.18rem, 1rem, 0) rotate(-12deg); }
 }
-@keyframes rain-drop-fall {
-  from { transform: translate3d(-10vw, -22vh, 0); }
-  to { transform: translate3d(12vw, 122vh, 0); }
-}
-@keyframes scene-snow-fall {
-  0% { opacity: 0; transform: translate3d(var(--snow-x), -10vh, 0); }
-  8% { opacity: var(--snow-opacity); }
-  38% { transform: translate3d(calc(var(--snow-x) + var(--snow-sway)), 38vh, 0); }
-  68% { transform: translate3d(calc(var(--snow-x) + var(--snow-sway-back)), 78vh, 0); }
-  92% { opacity: var(--snow-opacity); }
-  100% { opacity: 0; transform: translate3d(calc(var(--snow-x) + var(--snow-sway-end)), 122vh, 0); }
-}
-@keyframes snow-flake-spin { to { transform: rotate(var(--snow-turns)); } }
 @keyframes lightning { 0%, 88%, 100% { opacity: .15; } 90%, 94% { opacity: 1; } }
 @keyframes sound-wave { from { transform: scaleY(.55); } to { transform: scaleY(1.2); } }
 

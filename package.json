@@ -3,11 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm run build && http-server dist -p 3000 -c-1",
+    "dev": "npm run build && node tools/preview.mjs --port 3000",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/location.test.mjs test/hiofd-ip-query.test.mjs test/edge-ip-location.test.mjs",
+    "test": "node --test",
     "build": "tsx build.ts",
-    "preview": "http-server dist -p 4173 -c-1"
+    "preview": "node tools/preview.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -17,5 +17,8 @@
     "lightningcss": "^1.29.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "geotiff": "^3.0.5"
   }
 }
