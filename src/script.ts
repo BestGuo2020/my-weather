@@ -391,7 +391,7 @@ async function useLocation(options: { fallbackToDefault?: boolean; ipOnly?: bool
   try {
     let coordinates: Coordinates;
     if (ipOnly) {
-      coordinates = await getIpCoordinates();
+      coordinates = await getIpCoordinates(() => requestId === state.locationRequestId);
       diagnostics.source = "ip";
     } else {
       try {
@@ -405,7 +405,7 @@ async function useLocation(options: { fallbackToDefault?: boolean; ipOnly?: bool
         diagnostics.phase = "ip";
         elements.locationDetails.open = true;
         renderLocationFeedback();
-        coordinates = await getIpCoordinates();
+        coordinates = await getIpCoordinates(() => requestId === state.locationRequestId);
         diagnostics.source = "ip";
       }
     }

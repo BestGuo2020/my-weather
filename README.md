@@ -52,6 +52,10 @@ OpenWeather returns at most five geocoding results, so the app supplements its r
 
 Location and fullscreen features depend on browser support and permissions. IP-based positioning is approximate and may resolve to a nearby city.
 
+On EdgeOne Pages, the site first requests the same-origin `/api/ip-location` edge function, which queries HiOFD using EdgeOne's client-IP metadata and disables location-response caching. If the proxy is unavailable, the existing IP providers remain available. A successful browser location still takes priority.
+
+`edgeone.json` configures `npm run build` and the `dist` output directory for Git-connected deployment. Commit the root `edge-functions` and `lib` directories together with the site. See the [API and deployment notes](./docs/hiofd-ip-query.md).
+
 ## Getting Started
 
 ### Requirements

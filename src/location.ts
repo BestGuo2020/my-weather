@@ -1,4 +1,4 @@
-export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-07.3";
+export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-08.1";
 // accuracyMode is experimental; older browsers ignore the extra dictionary member.
 export const GPS_OPTIONS: PositionOptions & { accuracyMode: "precise" } = {
   enableHighAccuracy: true, timeout: 30000, maximumAge: 0, accuracyMode: "precise"
@@ -38,23 +38,26 @@ export function getGpsCoordinates(): Promise<Coordinates> {
 }
 
 const IP_GEO_PROVIDERS = [
+  { url: "/api/ip-location", name: "toola.hiofd.com (EdgeOne)", parse: (data) => ({ success: data.success === true, latitude: data.latitude, longitude: data.longitude }) },
   { url: "https://ipwho.is/", parse: (data) => ({ success: data.success !== false, latitude: data.latitude, longitude: data.longitude }) },
   { url: "https://ipapi.co/json/", parse: (data) => ({ success: !data.error, latitude: data.latitude, longitude: data.longitude }) }
 ];
 
-export async function getIpCoordinates(): Promise<Coordinates> {
+export async function getIpCoordinates(isCurrent = () => true): Promise<Coordinates> {
   for (const provider of IP_GEO_PROVIDERS) {
+    if (!isCurrent()) throw new Error("locationRequestSuperseded");
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch(provider.url, { signal: controller.signal });
+      const response = await fetch(provider.url, { signal: controller.signal, cache: "no-store" });
       if (!response.ok) continue;
       const location = provider.parse(await response.json());
       const latitude = Number(location.latitude), longitude = Number(location.longitude);
       if (location.success && location.latitude != null && location.longitude != null
+        && String(location.latitude).trim() !== "" && String(location.longitude).trim() !== ""
         && Number.isFinite(latitude) && Number.isFinite(longitude)
         && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180) {
-        return { lat: latitude.toFixed(5), lon: longitude.toFixed(5), provider: new URL(provider.url).hostname };
+        return { lat: latitude.toFixed(5), lon: longitude.toFixed(5), provider: provider.name || new URL(provider.url).hostname };
       }
     } catch {
       // Try the next IP provider.

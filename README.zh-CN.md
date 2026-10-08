@@ -52,6 +52,10 @@ OpenWeather 的地理编码接口最多返回 5 条结果，因此本项目会�
 
 定位和全屏功能依赖浏览器支持与用户授权。IP 定位只能提供近似位置，有可能显示附近的城市。
 
+部署在 EdgeOne Pages 时，网页优先通过同源 `/api/ip-location` 边缘函数查询 HiOFD 的 IP 归属地。函数使用 EdgeOne 提供的客户端 IP，并禁止缓存定位结果。代理不可用时，网页继续尝试原有 IP 定位服务。浏览器定位成功时仍优先使用设备位置。
+
+项目已配置 `edgeone.json`。关联 GitHub 自动部署时，构建命令为 `npm run build`、输出目录为 `dist`；根目录中的 `edge-functions` 和 `lib` 需要一同提交。[接口与部署说明](./docs/hiofd-ip-query.md)
+
 ## 本地运行
 
 ### 环境要求

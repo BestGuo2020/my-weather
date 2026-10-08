@@ -12,9 +12,10 @@ const bundle = buildSync({
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020'
 }).outputFiles[0].text;
 
-function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false, autoLocate = true, readsAccuracyMode = true, delayedInitialIp = false, mobile = true } = {}) {
+function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, proxyFails = true, proxyResponse = { success: true, latitude: 27.163578, longitude: 113.971656 }, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false, autoLocate = true, readsAccuracyMode = true, delayedInitialIp = false, mobile = true } = {}) {
   const nodes = new Map();
   const requests = [];
+  const fetchOptions = [];
   const options = [];
   let releaseInitialIp;
   const node = selector => {
@@ -41,8 +42,16 @@ function environment({ errorCode, errorMessage = 'Network location service unava
     localStorage: { getItem() { return null; }, setItem() {} },
     location: { search: '', href: 'https://weather.bestguo.top/', origin: 'https://weather.bestguo.top' }, history: { replaceState() {} },
     document: { querySelector: node, querySelectorAll: () => [], addEventListener() {}, documentElement: node('html'), body: node('body') },
-    fetch: async url => {
+    fetch: async (url, settings) => {
       requests.push(url);
+      fetchOptions.push(settings);
+      if (url === '/api/ip-location') {
+        if (delayedInitialIp && !releaseInitialIp) return new Promise(resolve => {
+          releaseInitialIp = () => resolve({ ok: true, json: async () => ({ success: true, latitude: 30.5928, longitude: 114.3055 }) });
+        });
+        if (proxyFails || ipFails) return { ok: false, status: 503 };
+        return { ok: true, json: async () => proxyResponse };
+      }
       if (url.startsWith('https://ipwho.is/') || url.startsWith('https://ipapi.co/')) {
         if (delayedInitialIp && !releaseInitialIp) return new Promise(resolve => {
           releaseInitialIp = () => resolve({ ok: true, json: async () => ({ success: true, latitude: 30.5928, longitude: 114.3055 }) });
@@ -66,7 +75,7 @@ function environment({ errorCode, errorMessage = 'Network location service unava
     requests.length = 0;
     context.weatherTest.useLocation({ fallbackToDefault: true });
   }
-  return { context, nodes, requests, options, node, app: context.weatherTest, releaseInitialIp: () => releaseInitialIp() };
+  return { context, nodes, requests, fetchOptions, options, node, app: context.weatherTest, releaseInitialIp: () => releaseInitialIp() };
 }
 
 async function settle() {
@@ -99,6 +108,43 @@ test('opening the page uses a labelled IP estimate without requesting device per
   assert.match(env.node('#location-message').textContent, /点击/);
   assert.doesNotMatch(env.node('#location-message').textContent, /浏览器定位失败/);
   assert.doesNotMatch(env.node('#location-debug').textContent, /enableHighAccuracy/);
+});
+
+test('mobile startup uses the same-origin EdgeOne location before third-party IP providers', async () => {
+  const env = environment({ autoLocate: false, proxyFails: false });
+  await settle();
+  assert.equal(env.options.length, 0);
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-message').textContent, /IP 估算/);
+  assert.match(env.node('#location-debug').textContent, /113\.97166, 27\.16358/);
+  assert.match(env.node('#location-debug').textContent, /toola\.hiofd\.com \(EdgeOne\)/);
+  assert.equal(env.requests[0], '/api/ip-location');
+  assert.equal(env.fetchOptions[0].cache, 'no-store');
+  assert.ok(!env.requests.some(url => url.includes('ipwho.is') || url.includes('ipapi.co')));
+});
+
+test('an unavailable EdgeOne endpoint falls back to the existing IP provider', async () => {
+  const env = environment({ autoLocate: false });
+  await settle();
+  assert.equal(env.requests[0], '/api/ip-location');
+  assert.equal(env.requests[1], 'https://ipwho.is/');
+  assert.equal(env.node('#city').textContent, '武汉市, CN');
+  assert.match(env.node('#location-debug').textContent, /ipwho\.is/);
+});
+
+test('empty proxy coordinates are rejected instead of locating the user at zero', async () => {
+  const env = environment({ autoLocate: false, proxyFails: false, proxyResponse: { success: true, latitude: '', longitude: 113.97 } });
+  await settle();
+  assert.equal(env.node('#city').textContent, '武汉市, CN');
+  assert.match(env.node('#location-debug').textContent, /ipwho\.is/);
+});
+
+test('EdgeOne fallback retains the original browser error', async () => {
+  const env = environment({ errorCode: 2, proxyFails: false });
+  await settle();
+  assert.equal(env.node('#city').textContent, '莲花县, CN');
+  assert.match(env.node('#location-debug').textContent, /错误码: 2/);
+  assert.match(env.node('#location-debug').textContent, /toola\.hiofd\.com \(EdgeOne\)/);
 });
 
 test('desktop startup still obtains device location automatically', async () => {
