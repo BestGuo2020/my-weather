@@ -72,8 +72,8 @@ body[data-period="night"] .scene-orb::after { content: ""; position: absolute; w
 body[data-period="day"] .current .temp { text-shadow: 0 2px 0 #ffffff55; }
 body[data-period="day"] .location, body[data-period="day"] .current,
 body[data-period="day"] .updated, body[data-period="day"] .status { text-shadow: none; }
-body[data-period="day"] .current .weather, body[data-period="day"] .current .hi-low { text-shadow: none; }
-.current .hi-low, .updated { padding: .15rem .55rem; border-radius: .65rem; background: var(--sky-readout-surface); }
+body[data-period="day"] .current .weather { text-shadow: none; }
+.updated { padding: .15rem .55rem; border-radius: .65rem; background: var(--sky-readout-surface); }
 main .updated { opacity: .95; }
 body[data-period="day"]:not([data-sky="rain"]):not([data-sky="storm"]) .github-button img { filter: brightness(0); opacity: .8; }
 body[data-period="day"]:not([data-sky="rain"]):not([data-sky="storm"]) footer { background: #193f5780; color: var(--color-paper); opacity: .95; }

@@ -49,7 +49,7 @@ const elements = {
   form: $<HTMLFormElement>(".search-form"), input: $<HTMLInputElement>("#city-search"), locate: $<HTMLButtonElement>("#location-button"), languageButton: $<HTMLButtonElement>("#language-button"),
   languageMenu: $("#language-menu"), languageCurrent: $("#language-current"), fullscreen: $("#fullscreen-button"),
   sound: $<HTMLButtonElement>("#sound-button"), city: $("#city"), date: $("#date"), temp: $("#temp"), weather: $("#weather"),
-  hiLow: $("#hi-low"), feels: $("#feels-like"), humidity: $("#humidity"), wind: $("#wind"),
+  feels: $("#feels-like"), humidity: $("#humidity"), wind: $("#wind"),
   icon: $("#weather-icon"), status: $("#status"), updated: $<HTMLTimeElement>("#updated-time"),
   placeMenu: $("#place-menu"), placeOptions: $("#place-options"),
   locationFeedback: $("#location-feedback"), locationMessage: $("#location-message"),
@@ -135,7 +135,6 @@ function renderWeather(data) {
   updateDate(data.dt, data.timezone);
   elements.temp.innerHTML = `${Math.round(data.main.temp)}<span>°c</span>`;
   elements.weather.textContent = data.weather[0].description || t(type);
-  elements.hiLow.textContent = `${Math.round(data.main.temp_min)}°c / ${Math.round(data.main.temp_max)}°c`;
   elements.feels.textContent = `${Math.round(data.main.feels_like)}°c`;
   elements.humidity.textContent = `${data.main.humidity}%`;
   elements.wind.textContent = `${Math.round(data.wind.speed * 10) / 10} m/s`;

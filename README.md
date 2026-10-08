@@ -8,7 +8,7 @@ A lightweight, responsive weather page with animated weather scenes, multilingua
 
 ## Features
 
-- Current temperature, weather condition, feels-like temperature, humidity, wind speed, and daily low/high
+- Current temperature, weather condition, feels-like temperature, humidity, and wind speed
 - Animated scenes for clear skies, clouds, rain, snow, thunderstorms, and mist
 - Rain and snow are confined to the miniature city, with three depth layers and intensity tiers; rain adds umbrellas, reflections and ripples, while snow covers roofs, trees and street edges
 - Day and night presentation based on the selected location
