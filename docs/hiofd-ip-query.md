@@ -55,7 +55,7 @@ The proxy returns only normalized location coordinates and a provider name, disa
 
 `edgeone.json` configures `npm run build` and the `dist` output directory. EdgeOne discovers the repository-root `edge-functions` directory automatically when deploying the Git-connected project; keep it in the repository alongside `lib` rather than placing it inside `src` or uploading only the static output. No additional environment variables or local Node.js server are required in production.
 
-After pushing the deployment branch, verify `https://weather.bestguo.top/api/ip-location`: it should return JSON with `success: true`, `latitude`, `longitude`, and `provider`. The response represents the network exit of the device making this verification request. The page's location details should report `toola.hiofd.com (EdgeOne)` when this provider is used.
+After pushing the deployment branch, verify `https://weather.bestguo.top/api/ip-location`: it should return JSON with `success: true`, `latitude`, `longitude`, and `provider`. The response represents the network exit of the device making this verification request. Location diagnostics are hidden during normal visits. Open `https://weather.bestguo.top/?debug=location` to inspect them; the provider should report `toola.hiofd.com (EdgeOne)` when this provider is used. Browser geolocation has a ten-second timeout before falling back to the IP providers.
 
 On a static local server or another hosting provider without EdgeOne functions, the endpoint may be unavailable; the browser continues to the existing IP providers. EdgeOne's local dev runtime does not necessarily provide production client-IP metadata.
 

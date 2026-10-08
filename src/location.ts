@@ -1,7 +1,7 @@
-export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-08.1";
+export const LOCATION_DIAGNOSTICS_VERSION = "2026-10-08.2";
 // accuracyMode is experimental; older browsers ignore the extra dictionary member.
 export const GPS_OPTIONS: PositionOptions & { accuracyMode: "precise" } = {
-  enableHighAccuracy: true, timeout: 30000, maximumAge: 0, accuracyMode: "precise"
+  enableHighAccuracy: true, timeout: 10000, maximumAge: 0, accuracyMode: "precise"
 };
 
 export type Coordinates = { lat: string; lon: string; accuracy?: number; timestamp?: number; provider?: string; accuracyModeRead?: boolean };

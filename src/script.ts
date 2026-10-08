@@ -31,6 +31,7 @@ const seoContent = {
 };
 const supportedLanguages = Object.keys(localeMap);
 const requestedLanguage = new URLSearchParams(location.search).get("lang");
+const showLocationDiagnostics = new URLSearchParams(location.search).get("debug") === "location";
 const initialLanguage = supportedLanguages.includes(requestedLanguage) ? requestedLanguage : localStorage.getItem("weather-language");
 const state = { lang: supportedLanguages.includes(initialLanguage) ? initialLanguage : "zh_cn", lastQuery: { q: "Northampton,GB" }, data: null, sound: false, placeName: "", pendingPlaces: [], updatedAt: null, refreshTimer: null, locationRequestId: 0, locationDiagnostics: null as LocationDiagnostics | null };
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
@@ -366,7 +367,7 @@ async function getWeather(params, selectedPlace = null) {
 
 function renderLocationFeedback() {
   const diagnostics = state.locationDiagnostics;
-  elements.locationFeedback.hidden = !diagnostics;
+  elements.locationFeedback.hidden = !diagnostics || !showLocationDiagnostics;
   if (!diagnostics) return;
   const feedback = locationFeedback(diagnostics, state.lang);
   elements.locationFeedback.dataset.warning = String(feedback.warning);

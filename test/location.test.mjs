@@ -92,7 +92,7 @@ test('browser success keeps the correct coordinates and accuracy, without IP fal
   assert.ok(!env.requests.some(url => url.includes('ipwho.is')));
   assert.equal(env.options[0].enableHighAccuracy, true);
   assert.equal(env.options[0].maximumAge, 0);
-  assert.equal(env.options[0].timeout, 30000);
+  assert.equal(env.options[0].timeout, 10000);
   assert.equal(env.options[0].accuracyMode, 'precise');
   for (const url of env.requests) {
     assert.ok(!new URL(url).searchParams.has('accuracy'));
@@ -104,6 +104,7 @@ test('opening the page uses a labelled IP estimate without requesting device per
   const env = environment({ autoLocate: false });
   await settle();
   assert.equal(env.options.length, 0);
+  assert.equal(env.node('#location-feedback').hidden, true);
   assert.match(env.node('#location-message').textContent, /IP 估算/);
   assert.match(env.node('#location-message').textContent, /点击/);
   assert.doesNotMatch(env.node('#location-message').textContent, /浏览器定位失败/);
