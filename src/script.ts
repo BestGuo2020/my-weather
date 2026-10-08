@@ -5,6 +5,7 @@ import { distanceKm, fromOpenMeteo, mergePlaceSources, normalizeCityName, type C
 import { renderCityScene } from "./city-scene";
 import { createLczClient } from "./lcz-client";
 import { renderSkyScene, skyProfile } from "./sky-scene";
+import { moonProfile, renderMoonPhase } from "./moon-phase";
 
 const API_KEY = "6b66bf5ee7db79399c1faa2969b57c9e";
 const API_URL = "https://api.openweathermap.org/data/2.5/weather";
@@ -54,7 +55,7 @@ const elements = {
   placeMenu: $("#place-menu"), placeOptions: $("#place-options"),
   locationFeedback: $("#location-feedback"), locationMessage: $("#location-message"),
   locationDetails: $<HTMLDetailsElement>("#location-details"), locationSummary: $("#location-summary"), locationDebug: $("#location-debug"),
-  cityScene: $("#city-scene"), skyClouds: $("#sky-clouds")
+  cityScene: $("#city-scene"), skyClouds: $("#sky-clouds"), sceneOrb: $(".scene-orb")
 };
 
 function t(key) { return translations[state.lang][key] || translations.en[key] || key; }
@@ -117,12 +118,20 @@ function updateDate(timestamp = Date.now() / 1000, timezone = 0) {
   }).format(new Date(utcMs));
 }
 
+function updateMoon() {
+  const coordinates = state.place || (state.data?.coord && { lat: state.data.coord.lat, lon: state.data.coord.lon });
+  // Moon phase follows the current absolute instant, never a timezone-shifted or
+  // cached weather timestamp. Location only changes the apparent tilt.
+  renderMoonPhase([elements.sceneOrb], moonProfile(new Date(), coordinates));
+}
+
 function renderWeather(data) {
   const type = weatherType(data.weather[0].id);
   const intensity = weatherIntensity(data.weather[0].id);
   const isNight = data.weather[0].icon.endsWith("n");
   document.body.dataset.weather = type === "drizzle" ? "rain" : type;
   document.body.dataset.period = isNight ? "night" : "day";
+  updateMoon();
   renderSkyScene(elements.skyClouds, skyProfile(type, data.weather[0].id, data.clouds?.all));
   document.body.dataset.intensity = intensity;
   elements.icon.className = `weather-icon icon-${type} intensity-${intensity}`;
@@ -510,6 +519,9 @@ elements.fullscreen.addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenLabel);
 
 applyLanguage();
+updateMoon();
+window.setInterval(updateMoon, REFRESH_INTERVAL);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) updateMoon(); });
 renderCityScene(elements.cityScene, { name: "Northampton", country: "GB", lat: 52.24, lon: -.89 });
 // On mobile, request device location from the user's click, like the working reference.
 const mobileBrowser = /Android|iPhone|iPad/i.test(navigator.userAgent);

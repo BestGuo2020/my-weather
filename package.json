@@ -19,6 +19,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "geotiff": "^3.0.5"
+    "geotiff": "^3.0.5",
+    "suncalc": "2.1.1"
   }
 }

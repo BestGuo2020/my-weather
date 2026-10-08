@@ -12,11 +12,13 @@ const bundle = buildSync({
   bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2020', external: ['./lcz-data']
 }).outputFiles[0].text;
 
-function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, proxyFails = true, proxyResponse = { success: true, latitude: 27.163578, longitude: 113.971656 }, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false, autoLocate = true, readsAccuracyMode = true, delayedInitialIp = false, mobile = true } = {}) {
+function environment({ errorCode, errorMessage = 'Network location service unavailable', ipFails = false, proxyFails = true, proxyResponse = { success: true, latitude: 27.163578, longitude: 113.971656 }, accuracy = 18, insecure = false, unsupported = false, approximateUnavailable = false, autoLocate = true, readsAccuracyMode = true, delayedInitialIp = false, mobile = true, now } = {}) {
   const nodes = new Map();
   const requests = [];
   const fetchOptions = [];
   const options = [];
+  const intervals = [];
+  const documentListeners = {};
   let releaseInitialIp;
   const node = selector => {
     if (!nodes.has(selector)) nodes.set(selector, {
@@ -36,12 +38,17 @@ function environment({ errorCode, errorMessage = 'Network location service unava
     }
   };
   const context = {
-    console, URL, URLSearchParams, Intl, Date, AbortController,
+    console, URL, URLSearchParams, Intl, AbortController,
+    Date: now === undefined ? Date : class extends Date {
+      constructor(...args) { super(...(args.length ? args : [now])); }
+      static now() { return now; }
+    },
     navigator: { ...(unsupported ? {} : { geolocation }), userActivation: { isActive: true }, userAgent: mobile ? 'Mobile Edge test browser; Android 14' : 'Desktop Edge test browser' },
-    window: { isSecureContext: !insecure, setTimeout: (...args) => setTimeout(...args).unref(), clearTimeout },
+    window: { isSecureContext: !insecure, setTimeout: (...args) => setTimeout(...args).unref(), clearTimeout,
+      setInterval(callback, delay) { intervals.push({ callback, delay }); return intervals.length; } },
     localStorage: { getItem() { return null; }, setItem() {} },
     location: { search: '', href: 'https://weather.bestguo.top/', origin: 'https://weather.bestguo.top' }, history: { replaceState() {} },
-    document: { querySelector: node, querySelectorAll: () => [], addEventListener() {},
+    document: { hidden: false, querySelector: node, querySelectorAll: () => [], addEventListener(name, listener) { documentListeners[name] = listener; },
       createElement: () => node(Symbol()), createDocumentFragment: () => node(Symbol()),
       documentElement: node('html'), body: node('body') },
     fetch: async (url, settings) => {
@@ -78,7 +85,8 @@ function environment({ errorCode, errorMessage = 'Network location service unava
     requests.length = 0;
     context.weatherTest.useLocation({ fallbackToDefault: true });
   }
-  return { context, nodes, requests, fetchOptions, options, node, app: context.weatherTest, releaseInitialIp: () => releaseInitialIp() };
+  return { context, nodes, requests, fetchOptions, options, node, intervals, documentListeners, setNow: value => { now = value; },
+    app: context.weatherTest, releaseInitialIp: () => releaseInitialIp() };
 }
 
 async function settle() {
@@ -130,6 +138,53 @@ test('weather rendering changes sky cover without turning cloudy nights into day
   assert.equal(env.node('body').dataset.period,'day');
   assert.equal(env.node('body').dataset.sky,'clear');
   assert.equal((env.node('#sky-clouds').innerHTML.match(/class="sky-cloud"/g)||[]).length,0);
+});
+
+test('moon updates by the current instant on its timer and resume, independently of cached weather', async () => {
+  const env = environment({ now: Date.parse('2026-10-08T12:00:00Z') });
+  await settle();
+  env.app.state.data.dt = Date.parse('2026-10-10T15:50:00Z') / 1000;
+  env.app.state.data.timezone = 28800;
+  env.app.state.data.weather = [{ id: 800, icon: '01n', description: '晴' }];
+  const icon = env.node('.moon');
+  icon.innerHTML = 'original weather icon';
+  env.app.renderWeather(env.app.state.data);
+  assert.equal(env.node('.scene-orb').dataset.moonPhase, 'waning-crescent');
+  assert.equal(icon.innerHTML, 'original weather icon');
+  const requests = env.requests.length;
+  const city = env.node('#city-scene').innerHTML;
+  env.setNow(Date.parse('2026-10-26T04:12:00Z'));
+  const timer = env.intervals.find(interval => interval.delay === 12 * 60 * 1000);
+  assert.ok(timer);
+  timer.callback();
+  assert.equal(env.node('.scene-orb').dataset.moonPhase, 'full');
+  assert.equal(icon.innerHTML, 'original weather icon');
+  env.setNow(Date.parse('2026-10-18T16:12:00Z'));
+  env.context.document.hidden = true;
+  env.documentListeners.visibilitychange();
+  assert.equal(env.node('.scene-orb').dataset.moonPhase, 'full');
+  env.context.document.hidden = false;
+  env.documentListeners.visibilitychange();
+  assert.equal(env.node('.scene-orb').dataset.moonPhase, 'first-quarter');
+  assert.equal(icon.innerHTML, 'original weather icon');
+  assert.equal(icon.dataset.moonPhase, undefined);
+  assert.equal(env.node('body').dataset.period, 'night');
+  assert.equal(env.node('#city-scene').innerHTML, city);
+  assert.equal(env.requests.length, requests);
+});
+
+test('changing the selected city updates lunar tilt while keeping global illumination', async () => {
+  const env = environment({ now: Date.parse('2026-10-08T12:00:00Z') });
+  await settle();
+  env.app.state.place = { name: 'London', country: 'GB', lat: 51.5, lon: -.1 };
+  env.app.renderWeather(env.app.state.data);
+  const markup = env.node('.scene-orb').innerHTML;
+  const fraction = env.node('.scene-orb').dataset.moonFraction;
+  env.app.state.place = { name: 'Sydney', country: 'AU', lat: -33.87, lon: 151.21 };
+  env.app.renderWeather(env.app.state.data);
+  assert.notEqual(env.node('.scene-orb').innerHTML, markup);
+  assert.equal(env.node('.scene-orb').dataset.moonFraction, fraction);
+  assert.equal(env.node('.moon').dataset.moonPhase, undefined);
 });
 
 // Real geocoder identities: Shenzhen and Haikou have separate Longhua districts.

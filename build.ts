@@ -63,7 +63,8 @@ await Promise.all([
   copyFile(resolve(sourceDir, "sitemap.xml"), resolve(outputDir, "sitemap.xml")),
   copyFile(resolve(sourceDir, "favicon.png"), resolve(outputDir, "favicon.png")),
   copyFile(resolve(sourceDir, "github-svgrepo-com.svg"), resolve(outputDir, "github-svgrepo-com.svg")),
-  copyFile(resolve(rootDir, "node_modules/geotiff/LICENSE"), resolve(outputDir, "geotiff-license.txt"))
+  copyFile(resolve(rootDir, "node_modules/geotiff/LICENSE"), resolve(outputDir, "geotiff-license.txt")),
+  copyFile(resolve(rootDir, "node_modules/suncalc/LICENSE"), resolve(outputDir, "suncalc-license.txt"))
 ]);
 
 console.log(`Build complete: ${outputDir}`);

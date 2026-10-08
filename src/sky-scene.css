@@ -65,8 +65,12 @@ body[data-sky="broken"] .scene-orb { opacity: .2; }
 body[data-sky="overcast"] .scene-orb, body[data-sky="rain"] .scene-orb,
 body[data-sky="snow"] .scene-orb, body[data-sky="storm"] .scene-orb,
 body[data-sky="mist"] .scene-orb { opacity: 0; }
-body[data-period="night"] .scene-orb { background: #e8f0fa; box-shadow: 0 0 2rem #c6dfff38; }
-body[data-period="night"] .scene-orb::after { content: ""; position: absolute; width: 85%; height: 85%; top: -9%; left: 27%; border-radius: 50%; background: var(--sky-top); }
+.moon-disc { display: block; width: 100%; height: 100%; }
+.moon-dark { fill: currentColor; opacity: .055; }
+.moon-light { fill: currentColor; }
+.scene-orb .moon-disc { display: none; }
+body[data-period="night"] .scene-orb { color: #e8f0fa; background: transparent; box-shadow: none; }
+body[data-period="night"] .scene-orb .moon-disc { display: block; filter: drop-shadow(0 0 1.25rem #c6dfff38); }
 
 /* Bright daylight needs ink-coloured readouts, rather than a dark full-page veil. */
 body[data-period="day"] .current .temp { text-shadow: 0 2px 0 #ffffff55; }
