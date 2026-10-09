@@ -54,6 +54,7 @@
   animation-play-state: paused;
 }
 .city-snowflake { animation-name: city-snow-fall; }
+.city-rain-impact { animation-name: city-rain-land; }
 .particle-moderate, .particle-heavy { display: none; }
 body[data-intensity="moderate"] .particle-moderate,
 body[data-intensity="heavy"] .particle-moderate,
@@ -65,8 +66,8 @@ body[data-weather="snow"] .city-snowflake { animation-play-state: running; }
 .city-ripple {
   fill: none; stroke: #b7d3df; stroke-width: .7; opacity: 0;
   transform-box: fill-box; transform-origin: center;
-  animation: city-ripple var(--ripple-duration) ease-out infinite;
-  animation-delay: var(--ripple-delay); animation-play-state: paused;
+  animation: city-ripple var(--particle-duration) linear infinite;
+  animation-delay: var(--particle-delay); animation-play-state: paused;
 }
 body[data-weather="rain"] .city-ripple, body[data-weather="thunderstorm"] .city-ripple { animation-play-state: running; }
 .street-shadow { fill: #142938; opacity: .25; }
@@ -268,9 +269,16 @@ footer { background: linear-gradient(transparent, #182c3d80); }
   88% { opacity: var(--particle-opacity); }
   100% { opacity: 0; transform: translate(calc(var(--particle-x) + var(--particle-drift) * .5), calc(var(--particle-top) + var(--particle-fall))); }
 }
+@keyframes city-rain-land {
+  0% { opacity: 0; transform: translate(var(--particle-x), var(--particle-top)); }
+  8% { opacity: var(--particle-opacity); }
+  65% { opacity: var(--particle-opacity); transform: translate(calc(var(--particle-x) + var(--particle-drift)), calc(var(--particle-top) + var(--particle-fall))); }
+  66%, 100% { opacity: 0; transform: translate(calc(var(--particle-x) + var(--particle-drift)), calc(var(--particle-top) + var(--particle-fall))); }
+}
 @keyframes city-ripple {
-  0% { opacity: 0; transform: scale(.4); }
-  25% { opacity: .38; }
+  0%, 65% { opacity: 0; transform: scale(.2); }
+  66% { opacity: .28; transform: scale(.35); }
+  72% { opacity: .32; transform: scale(.65); }
   100% { opacity: 0; transform: scale(1.8); }
 }
 @media (max-width: 40rem) {

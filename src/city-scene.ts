@@ -154,7 +154,7 @@ export function citySceneMarkup(scale: CityScale, seed: string, density: CityPro
     <path class="road-edge" d="M0 398H1440"/>
     <path class="road-crossing" d="M1127 357h50m-50 9h50m-50 9h50m-50 9h50m-50 9h50"/>
     <g class="road-reflection"><path d="M120 389h190m290-28h150m210 26h180"/></g>
-    ${cityRainGroundMarkup(seed)}
+    ${cityRainGroundMarkup(seed, weatherTop)}
     ${cityWeatherMarkup("near", seed, weatherTop)}
     <g class="street-furniture">${[84, 354, 650, 980, 1260].map(x => lamp(x)).join("")}
       <g transform="translate(843 344)"><path class="street-pole" d="M0 0v-63"/>
