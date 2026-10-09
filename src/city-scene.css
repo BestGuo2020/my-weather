@@ -128,7 +128,7 @@ body[data-weather="rain"] .city-ripple, body[data-weather="thunderstorm"] .city-
 .person-arm-holding { display: none; }
 .person-umbrella { opacity: 0; }
 .umbrella-canopy { fill: #cda578; }
-.umbrella-handle { stroke: #c4c4b4; stroke-width: 1.5; }
+.umbrella-handle { stroke: #8fa3a4; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .tree-snow, .street-snow { fill: #e6eef0; opacity: 0; }
 
 body[data-weather="clouds"] .city-scene,

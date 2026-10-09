@@ -106,20 +106,20 @@ function pedestrian(index: number): string {
   const arm = (side: "front" | "back") => `<g class="person-arm-${side} person-limb-${side}" transform="translate(0 -21)">
     <g class="person-arm-swing">
       <g class="person-arm-walking"><path class="person-limb" d="M0 0l.5 4.5 1.8 4"/><circle class="person-skin" cx="2.3" cy="8.5" r="1.1"/></g>
-      ${side === "front" ? '<g class="person-arm-holding"><path class="person-limb" d="M0 0l4 4-4 2"/><circle class="person-skin" cx="0" cy="6" r="1.1"/></g>' : ""}
+      ${side === "front" ? '<g class="person-arm-holding"><path class="person-limb" d="M0 0l1 5 6-2"/><circle class="person-skin" cx="7" cy="3" r="1.2"/></g>' : ""}
     </g>
   </g>`;
   return `<g class="city-person${reverse ? " person-reverse" : ""}" style="--travel-duration:${duration}s;--travel-delay:-${duration * (.16 + index * .18)}s;--park-x:${265 + index * 215}px;--walk-duration:${walkDuration}s;--walk-delay:${walkDelay}s;--walk-opposite-delay:${walkDelay - walkDuration / 2}s">
     <g transform="translate(0 340) scale(${reverse ? -1 : 1} 1)">
       <ellipse class="street-shadow person-walk-shadow" cx="0" cy="2" rx="9" ry="2"/>
       <g class="person-body">
+        <g class="person-umbrella" transform="translate(7 -4)"><path class="umbrella-canopy" d="M-14-31q14-20 28 0q-5-4-9 0q-5-4-9 0q-5-4-10 0Z"/>
+          <path class="umbrella-handle" d="M0-32v19q0 2 2 2t2-2"/></g>
         ${arm("back")}${leg("back")}${leg("front")}
         <circle class="person-skin" cx=".7" cy="-27" r="3.5"/>
         <path class="person-skin" d="M3-28l2 2H3Z"/>
         <path class="person-coat" d="M-3-21q4-3 8 0l-1 12H-4Z"/>
         ${arm("front")}
-        <g class="person-umbrella"><path class="umbrella-canopy" d="M-14-31q14-20 28 0q-5-4-9 0q-5-4-9 0q-5-4-10 0Z"/>
-          <path class="umbrella-handle" d="M0-32v19q0 4 4 2"/></g>
       </g>
     </g>
   </g>`;
