@@ -62,7 +62,7 @@ function t(key) { return translations[state.lang][key] || translations.en[key] |
 
 function updateSeo() {
   const seo = seoContent[state.lang];
-  const pageUrl = `https://weather.bestguo.top/?lang=${state.lang}`;
+  const pageUrl = `https://my-weather.guoguo-labs.online/?lang=${state.lang}`;
   document.title = seo.title;
   $("meta[name='description']").setAttribute("content", seo.description);
   $("meta[name='keywords']").setAttribute("content", seo.keywords);
